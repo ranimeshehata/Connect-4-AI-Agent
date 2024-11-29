@@ -53,7 +53,8 @@ class ConnectFour:
 
     def create_game_board(self):
         self.clear_window()
-        self.root.geometry(f"{COLS * CELL_SIZE + 20}x{ROWS * CELL_SIZE + 100}")  # Set the window size for the game board
+        extra_height = 100  # Add extra height to accommodate the info label
+        self.root.geometry(f"{COLS * CELL_SIZE + 20}x{ROWS * CELL_SIZE + 100 + extra_height}")  # Increase the window size
         self.canvas = tk.Canvas(self.root, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="#282c34", highlightthickness=0)
         self.canvas.pack(pady=20)
 
@@ -103,7 +104,7 @@ class ConnectFour:
         self.make_move(best_move, AI_PIECE)
         self.draw_board()
         algorithm_name = ALGORITHM_NAMES.get(self.algorithm)
-        self.info_label.config(text=f"AI Best Move: {best_move + 1}, Time for AI: {execution_time:.2f} msec, Algorithm: {algorithm_name}")
+        self.info_label.config(text=f"AI Best Move: {best_move + 1}\nTime for AI: {execution_time:.2f} msec\nAlgorithm: {algorithm_name}")
         self.info_label.update_idletasks()  # Ensure the label is updated immediately
         self.check_game_over()
 

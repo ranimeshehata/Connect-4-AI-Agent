@@ -1,17 +1,12 @@
-    start_time = time.time()
-        state = self.convert_from_grid_to_string(self.board)
-        root = Node(None, state, 0, 1, 0, None)
-        if self.algorithm == 1:
-            best_move, _ = self.agent(root, 2, 1)
-        elif self.algorithm == 2:
-            best_move, _ = self.agent(root, 2, 2)
-        elif self.algorithm == 3:
-            best_move, _ = self.agent(root, 2, 3)
-        end_time = time.time()
-        execution_time = end_time - start_time
+        self.clear_window()
+        extra_width = 100
+        extra_height = 100
+        self.root.geometry(f"{COLS * CELL_SIZE + 20 + extra_width}x{ROWS * CELL_SIZE + 100 + extra_height}")  # Increase the window size
+        self.canvas = tk.Canvas(self.root, width=COLS * CELL_SIZE + extra_width, height=ROWS * CELL_SIZE + extra_height, bg="#282c34", highlightthickness=0)
+        self.canvas.pack(pady=20)
 
-        self.make_move(best_move, AI_PIECE)
+        self.info_label = tk.Label(self.root, text="", font=("Arial", 14), fg="white", bg="#282c34")
+        self.info_label.pack(pady=10)
+
         self.draw_board()
-        algorithm_name = ALGORITHM_NAMES.get(self.algorithm, "Unknown Algorithm")
-        self.info_label.config(text=f"AI Move: {best_move + 1}, Time: {execution_time:.2f} seconds, Algorithm: {algorithm_name}")
-        self.check_game_over()
+        self.canvas.bind("<Button-1>", self.human_move)
