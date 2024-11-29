@@ -48,9 +48,11 @@ def minimize(node, k, player1, turn):
             min_child = child
 
     node.value = min_value
-    node.min_child = min_child
+    node.max_child = min_child
     return node.value
 
+def minimax(node, k, player1, turn):
+        return maximize(node, k, player1, turn)
 
 def print_tree(node):
     queue = []
@@ -68,9 +70,20 @@ def print_tree(node):
         for child in s.children:
             queue.append(child)
 
+
+def print_best_moves(node):
+    turn = 1
+    while node.max_child:
+        print("Player1 's move should be: ", node.max_child.move) if turn == 1 else print("Player2 's move should be: ",
+                                                                                          node.max_child.move)
+        turn = (turn % 2) + 1
+        node = node.max_child
+
+
 if __name__ == "__main__":
-    # board = "0" * 7 * 6  # optimal move is 3
-    # board = "0" * 7 * 5 + "0012210"  # optimal move is 3
+    # example empty board
+    board = "0" * 7 * 6  # optimal move is 3
+    board = "0" * 7 * 5 + "0012210"  # optimal move is 3
     board = "0" * 7 * 4 + "0010000" + "0012200"  # optimal move is 5 to block
     # print(board[9])
     node = Node(None, board, 0, 1, 0, None)
@@ -79,11 +92,12 @@ if __name__ == "__main__":
     k = 2
     player1 = 0
     turn = 1
-    # expectiminimax(node, k, player1, turn)
-    # print(expectiminimax(node, k, player1, turn))
+    # alpha_beta_pruning(node, k, player1, turn)
+    # print(alpha_beta_pruning(node, k, player1, turn))
     # print(node.value)
     # player1 = 1
 
+    print("Running Minimax...")
     print(maximize(node, k, player1, turn))
+    print("Printing Tree...")
     print_tree(node)
-    print()
