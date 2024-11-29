@@ -1,6 +1,18 @@
 ROWS = 6
 COLS = 7
 
+def string_to_arrayint(state):
+    return [int(state[i:i+7]) for i in range(0, len(state), 7)]
+
+def arrayint_to_string(array):
+    state = ""
+    j = ""
+    for i in array:
+        if(len(str(i)) < 7):
+            j = '0'*(7-len(str(i))) + str(i)
+        state += j
+    return state
+
 def drop_disc(state, column, piece):
     for row in range(5, -1, -1):
         # print("index now is", row * 7 + column, "column is", column, "row is", row)
@@ -67,7 +79,9 @@ def score_position(state, piece):
     return score
 
 def evaluate_window(window, piece):
-    opponent_piece = "1" if piece == "2" else "2"
+    # opponent_piece = "1" if piece == "2" else "2"
+    piece = "1"
+    opponent_piece = "2"
     score = 0
 
     # Evaluate offensive potential
@@ -84,13 +98,12 @@ def evaluate_window(window, piece):
         consecutive_pieces = 0
 
 
-    free_slots = window.count("0")
     if consecutive_pieces == 4:
-        score += 100000  # Win condition
+        score += 1000000  # Win condition
     elif consecutive_pieces == 3 and free_slots == 1:
-        score += 5000  # Strong winning opportunity
+        score += 50000  # Strong winning opportunity
     elif consecutive_pieces == 2 and free_slots == 2:
-        score += 200  # Potential winning connection
+        score += 2000  # Potential winning connection
     elif consecutive_pieces == 2 and free_slots > 2:
         score += 10  # Encourage building connections
 
@@ -108,11 +121,11 @@ def evaluate_window(window, piece):
         opponent_consecutive = 0
 
     if opponent_consecutive == 4:
-        score -= 50000  # Block opponent's win condition
+        score -= 5000000  # Block opponent's win condition
     elif opponent_consecutive == 3 and free_slots == 1:
-        score -= 4000  # Block opponent's strong winning opportunity
+        score -= 400000  # Block opponent's strong winning opportunity
     elif opponent_consecutive == 2 and free_slots == 2:
-        score -= 100  # Block opponent's potential winning connection
+        score -= 1000  # Block opponent's potential winning connection
     elif opponent_consecutive == 2 and free_slots > 2:
         score -= 5  # Discourage opponent from building connections
 
