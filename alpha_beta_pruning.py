@@ -3,11 +3,10 @@ from node import Node
 from utils import score_position, is_valid_move, get_valid_moves, is_terminal, drop_disc
 
 def maximize(node, k, player1, turn, alpha, beta):
-    
     valid_moves = get_valid_moves(node.board)
     
-    #if terminal node or depth reached, return heuristic value
-    if node.depth == k or valid_moves == []:
+     # Terminal condition: maximum depth, no moves, or terminal game state, return heuristic value
+    if node.depth == k or valid_moves == [] or is_terminal(node.board):
         score = score_position(node.board, str(turn))
         node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
         return node.value
@@ -18,19 +17,19 @@ def maximize(node, k, player1, turn, alpha, beta):
     
     for move in valid_moves:
         child_state = drop_disc(node.board, move, turn)
-        child = Node(node, child_state, node.depth+1, 2, turn, move)
+        child = Node(node, child_state, node.depth+1, 2, (turn%2)+1, move)
         node.children.append(child)
         
-        value = minimize(child, k, player1, turn, alpha, beta)
+        value = minimize(child, k, player1, (turn%2)+1, alpha, beta)
         
         # <maxChild, maxUtility> = <child, value> if value > maxUtility
-        # alpha = max(alpha, max_value)
         if value > max_value:
             max_value = value
             max_child = child
+            
         alpha = max(alpha, max_value)
         
-        # if beta <= alpha, break (pruning)
+        # pruning
         if beta <= alpha:
             break
         
@@ -40,11 +39,10 @@ def maximize(node, k, player1, turn, alpha, beta):
 
 
 def minimize(node, k, player1, turn, alpha, beta):
-    
     valid_moves = get_valid_moves(node.board)
     
-    #if terminal node or depth reached, return heuristic value
-    if node.depth == k or valid_moves == []:
+    # Terminal condition: maximum depth, no moves, or terminal game state, return heuristic value
+    if node.depth == k or valid_moves == [] or is_terminal(node.board):
         score = score_position(node.board, str(turn))
         node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
         return node.value
@@ -55,19 +53,19 @@ def minimize(node, k, player1, turn, alpha, beta):
     
     for move in valid_moves:
         child_state = drop_disc(node.board, move, turn)
-        child = Node(node, child_state, node.depth+1, 1, turn, move)
+        child = Node(node, child_state, node.depth+1, 1, (turn%2)+1, move)
         node.children.append(child)
         
-        value = maximize(child, k, player1, turn, alpha, beta)
+        value = maximize(child, k, player1, (turn%2)+1, alpha, beta)
         
         # <minChild, minUtility> = <child, value> if value < minUtility
-        # beta = min(beta, min_value)
         if value < min_value:
             min_value = value
             min_child = child
+            
         beta = min(beta, min_value)
         
-        # if beta <= alpha, break (pruning)
+        # pruning
         if beta <= alpha:
             break
         
@@ -98,7 +96,8 @@ def print_tree(node):
             
 
 if __name__ == "__main__":
-    board = "0"*7*6 # optimal move is 3
+    # example empty board
+    board = "0"*7*6 # optimal move is 3 
     board = "0"*7*5 + "0012210" # optimal move is 3
     board = "0"*7*4 + "0010000" + "0012200" # optimal move is 5 to block
     # print(board[9])
@@ -113,10 +112,10 @@ if __name__ == "__main__":
     # print(node.value)
     # player1 = 1
     
+    print("Running Alpha-Beta Pruning...")
     print(alpha_beta_pruning(node, k, player1, turn))
+    print("Printing Tree...")
     print_tree(node)
-    print()
-
 
 # def minimax_alpha_beta(node, state, depth, alpha, beta, piece, maximizingPlayer, tree):
 #     if depth == 0 or is_terminal(state):
