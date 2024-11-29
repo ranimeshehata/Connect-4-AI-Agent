@@ -1,6 +1,7 @@
 
 
 import math
+import time
 from node import Node
 from utils import score_position, is_valid_move, get_valid_moves, is_terminal, drop_disc
 
@@ -57,7 +58,7 @@ def minimize(node, k, player1, turn, tree_root):
             min_value = value
             min_child = child
     node.value = min_value
-    node.min_child = min_child
+    node.max_child = min_child
     return node.value
 
 
@@ -133,14 +134,19 @@ def print_tree(node):
     
 
 if __name__ == "__main__":
-    board = "0"*7*6 # optimal move is 3
-    board = "0"*7*5 + "0012210" # optimal move is 3
-    board = "0"*7*4 + "0010000" + "0012200" # optimal move is 5 to block
-    # print(board[9])
+    # board = "0"*7*6 # optimal move is 3
+    board = "0"*7*4 + "0000200" + "0111220" # optimal move is 0
+    # board = "0"*7*4 + "0001200" + "0111220" ,player1 = 1 #value is  -6153.84 best move is 6
+    # board = "0"*7*3 + "0000200" + "0001200" + "1111222" # best move is 4
+    # board = [0]*6
+    # board = [0, 0, 0, 0, 0, 1000]
+    # board = "0"*7*5 + "0012210" # optimal move is 3
+    # board = "0"*7*4 + "0010000" + "0012200" # optimal move is 5 to block
+    # print(board)
     node = Node(None, board, 0, 1, 0, None)
     # player1 = 0 if ai-agent, else 1
     # turn = 1 if player1, else 2
-    k = 2
+    k = 4
     player1 = 0
     turn = 1
     # expectiminimax(node, k, player1, turn)
@@ -149,5 +155,19 @@ if __name__ == "__main__":
     # player1 = 1
     
     print(expectiminimax(node, k, player1, turn))
-    print_tree(node)
+    # print_tree(node)
     print()
+    print("value is ",node.value)
+    print("best move is", node.max_child.move)
+    #     print("best move is", node.max_child.move)
+    # for k in range(1, 15):
+    #     t1 = time.time()
+    #     node = Node(None, board, 0, 1, 0, None)
+    #     value = expectiminimax(node, k, player1, turn)
+    #     t2 = time.time()
+    #     print("k is ", k)
+    #     print("Time taken is ", t2-t1)
+    #     print("value is ",value)
+    #     print("best move is", node.max_child.move)
+
+

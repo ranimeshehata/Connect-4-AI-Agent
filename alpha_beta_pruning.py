@@ -70,7 +70,7 @@ def minimize(node, k, player1, turn, alpha, beta):
             break
         
     node.value = min_value
-    node.min_child = min_child
+    node.max_child = min_child
     return node.value
 
 
@@ -93,7 +93,13 @@ def print_tree(node):
 
         for child in s.children:
             queue.append(child)
-            
+
+def print_best_moves(node):
+    turn = 1
+    while node.max_child:
+        print("Player1 's move should be: ", node.max_child.move) if turn == 1 else print("Player2 's move should be: ", node.max_child.move)
+        turn = (turn%2)+1
+        node = node.max_child        
 
 if __name__ == "__main__":
     # example empty board
