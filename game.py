@@ -2,6 +2,8 @@ import random
 import time
 from node import Node
 from alpha_beta_pruning import alpha_beta_pruning
+from minimax import maximize, minimize
+from expectiminimax import expectiminimax
 from utils import drop_disc, get_valid_moves, is_terminal, score_position
 
 ROWS = 6
@@ -34,8 +36,12 @@ def agent(grid, depth, option):
         root.children.append(child_node)
         
         try:
-            # Correct call to alpha-beta pruning with 4 arguments
-            score = alpha_beta_pruning(child_node, depth, option == 1, 2)
+            if option == 1:
+                score = alpha_beta_pruning(child_node, depth, True, 2)
+            # elif option == 2:
+            #     score = maximize(child_node, depth, True, 2, float('-inf'), float('inf'))
+            elif option == 3:
+                score = expectiminimax(child_node, depth, True, 2)
             scores[col] = score
         except Exception as e:
             print(f"Error processing column {col}: {e}")
@@ -79,7 +85,8 @@ board = [
 
 def main():
     start = time.time()
-    Res = agent(board, 2, 1)  # Assuming player1 is AI (option 1)
+    option = 1
+    Res = agent(board, 2, option)  # Assuming player1 is AI (option 1)
     print("Best Move:", Res[0])
     print("Tree Structure:")
     print_tree(Res[1])  # Prints the tree of nodes explored during alpha-beta pruning
