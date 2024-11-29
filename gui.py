@@ -18,6 +18,7 @@ class ConnectFour:
     def __init__(self, root):
         self.root = root
         self.root.title("Connect Four")
+        self.root.geometry("700x1000")  # Set the window size for the main menu
         self.algorithm = None
         self.create_main_menu()
 
@@ -44,8 +45,12 @@ class ConnectFour:
 
     def create_game_board(self):
         self.clear_window()
+        self.root.geometry(f"{COLS * CELL_SIZE + 20}x{ROWS * CELL_SIZE + 100}")  # Set the window size for the game board
         self.canvas = tk.Canvas(self.root, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="#282c34", highlightthickness=0)
         self.canvas.pack(pady=20)
+
+        self.info_label = tk.Label(self.root, text="", font=("Arial", 14), fg="white", bg="#282c34")
+        self.info_label.pack(pady=10)
 
         self.draw_board()
         self.canvas.bind("<Button-1>", self.human_move)
@@ -74,6 +79,7 @@ class ConnectFour:
                 self.root.after(500, self.ai_move)
 
     def ai_move(self):
+        start_time = time.time()
         state = self.convert_from_grid_to_string(self.board)
         root = Node(None, state, 0, 1, 0, None)
         if self.algorithm == 1:
@@ -82,8 +88,12 @@ class ConnectFour:
             best_move, _ = self.agent(root, 2, 2)
         elif self.algorithm == 3:
             best_move, _ = self.agent(root, 2, 3)
+        end_time = time.time()
+        execution_time = end_time - start_time
+
         self.make_move(best_move, AI_PIECE)
         self.draw_board()
+        self.info_label.config(text=f"AI Move: {best_move + 1}, Time: {execution_time:.2f} seconds")
         self.check_game_over()
 
     def make_move(self, col, piece):
