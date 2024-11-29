@@ -113,11 +113,40 @@ def chance_node(node, k, player1, turn, tree_root, move):
     node.value = expected_value
     return node.value
 
+def print_tree(node):
+    queue = []
+    queue.append(node)
+    node_type = 0
+    while queue:
+        s = queue.pop(0)
+        if s.node_type != node_type:
+            print()
+            print("Node type changed to", s.node_type)
+            node_type = s.node_type
+            
+        print(s.value ," move:",s.move,"  ", end=" ")
+
+        for child in s.children:
+            queue.append(child)
+
+        
+    
 
 if __name__ == "__main__":
     board = "0"*7*6
+    board = "0"*7*5 + "0"*2+"1"+"22"+"1"+"0"
     # print(board[9])
     node = Node(None, board, 0, 1, 0, None)
     # player1 = 0 if ai-agent, else 1
     # turn = 1 if player1, else 2
-    print(expectiminimax(node, 3, 0, 1))
+    k = 2
+    player1 = 0
+    turn = 1
+    # expectiminimax(node, k, player1, turn)
+    # print(expectiminimax(node, k, player1, turn))
+    # print(node.value)
+    # player1 = 1
+    
+    print(expectiminimax(node, k, player1, turn))
+    print_tree(node)
+    print()
