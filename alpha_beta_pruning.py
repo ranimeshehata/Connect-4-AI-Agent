@@ -1,4 +1,5 @@
 import math
+import time
 from node import Node
 from utils import score_position, is_valid_move, get_valid_moves, is_terminal, drop_disc
 
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     node = Node(None, board, 0, 1, 0, None)
     # player1 = 0 if ai-agent, else 1
     # turn = 1 if player1, else 2
-    k = 2
+    k = 8
     player1 = 0
     turn = 1
     # alpha_beta_pruning(node, k, player1, turn)
@@ -119,6 +120,9 @@ if __name__ == "__main__":
     # player1 = 1
     
     print("Running Alpha-Beta Pruning...")
+    start=time.time()
     print(alpha_beta_pruning(node, k, player1, turn))
+    end=time.time()
     print("Printing Tree...")
     print_tree(node)
+    print("Time taken: ", end-start)
