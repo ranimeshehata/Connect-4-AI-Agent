@@ -1,50 +1,89 @@
 import math
-from utils import drop_disc, get_valid_moves, is_terminal, score_position
+from node import Node
+from utils import score_position, is_valid_move, get_valid_moves, is_terminal, drop_disc
 
-def minimax(state, depth, piece, maximizingPlayer, tree):
-    if depth == 0 or is_terminal(state):
-        return score_position(state, piece)
-    valid_location = get_valid_moves(state)
-    if maximizingPlayer:
-        value = -math.inf
-        for col in valid_location:
-            child = drop_disc(state, col, piece)
-            new_dict = {
-                child: {
-                    "depth": depth - 1,
-                    "piece": piece % 2 + 1,
-                    "value": 0,
-                    "childs": [],
-                }
-            }
-            value = max(
-                value,
-                minimax(
-                    child, depth - 1, piece % 2 + 1, False, new_dict
-                ),
-            )
-            new_dict[child]["value"] = value
-            tree[state]["childs"].append(new_dict)
-        return value
-    else:
-        value = math.inf
-        for col in valid_location:
-            child = drop_disc(state, col, piece)
-            new_dict = {
-                child: {
-                    "depth": depth - 1,
-                    "piece": piece % 2 + 1,
-                    "value": 0,
-                    "childs": [],
-                }
-            }
+def maximize(node, k, player1, turn):
+    if node.depth == k or is_terminal(node.board):
+        score = score_position(node.board, str(turn))
+        node.value = -1*score if player1 else score             #if player1 = 0 then it is the ai-agent
+        return node.value
 
-            value = min(
-                value,
-                minimax(
-                    child, depth - 1, piece % 2 + 1, True, new_dict
-                ),
-            )
-            new_dict[child]["value"] = value
-            tree[state]["childs"].append(new_dict)
-        return value
+    valid_moves = get_valid_moves(node.board)
+    for move in valid_moves:
+        child_state = drop_disc(node.board, move, turn)
+        child = Node(node, child_state, node.depth+1, 2, 3-turn, move)
+        node.children.append(child)
+
+    max_value = -math.inf
+    max_child = None
+    for child in node.children:
+        value = minimize(child, k, player1, 3-turn)       #turn?????????
+        if value > max_value:
+            max_value = value
+            max_child = child
+
+    node.value = max_value
+    node.max_child = max_child
+    return node.value
+
+
+def minimize(node, k, player1, turn):
+    if node.depth == k or is_terminal(node.board):
+        score = score_position(node.board, str(turn))
+        node.value = -1*score if player1 else score
+        return node.value
+
+    valid_moves = get_valid_moves(node.board)
+    for move in valid_moves:
+        child_state = drop_disc(node.board, move, turn)
+        child = Node(node, child_state, node.depth+1, 1, 3-turn, move)
+        node.children.append(child)
+
+    min_value = math.inf
+    min_child = None
+    for child in node.children:
+        value = maximize(child, k, player1, 3-turn)
+        if value < min_value:
+            min_value = value
+            min_child = child
+
+    node.value = min_value
+    node.min_child = min_child
+    return node.value
+
+
+def print_tree(node):
+    queue = []
+    queue.append(node)
+    node_type = 0
+    while queue:
+        s = queue.pop(0)
+        if s.node_type != node_type:
+            print()
+            print("Node type changed to", s.node_type)
+            node_type = s.node_type
+
+        print(s.value, " move:", s.move, "  ", end=" ")
+
+        for child in s.children:
+            queue.append(child)
+
+if __name__ == "__main__":
+    # board = "0" * 7 * 6  # optimal move is 3
+    # board = "0" * 7 * 5 + "0012210"  # optimal move is 3
+    board = "0" * 7 * 4 + "0010000" + "0012200"  # optimal move is 5 to block
+    # print(board[9])
+    node = Node(None, board, 0, 1, 0, None)
+    # player1 = 0 if ai-agent, else 1
+    # turn = 1 if player1, else 2
+    k = 2
+    player1 = 0
+    turn = 1
+    # expectiminimax(node, k, player1, turn)
+    # print(expectiminimax(node, k, player1, turn))
+    # print(node.value)
+    # player1 = 1
+
+    print(maximize(node, k, player1, turn))
+    print_tree(node)
+    print()
