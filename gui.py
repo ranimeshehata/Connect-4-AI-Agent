@@ -34,8 +34,7 @@
 # pygame.display.set_caption("Connect Four")
 import tkinter as tk
 from tkinter import ttk
-from game_logic import GameLogic
-from ai_agent import AIAgent
+
 import numpy as np
 
 
@@ -91,15 +90,21 @@ class ConnectFourGUI:
 
     def start_game(self):
         try:
+            # depth = int(self.depth.get())
+            # if depth <= 0:
+            #     raise ValueError("Depth must be positive")
+            #
+            # self.game = GameLogic()
+            # self.ai_agent = AIAgent(self.game, depth)
+            # self.game_active = True
+            # self.status_var.set("Game started - Your turn!")
+            # self.draw_board()
+
             depth = int(self.depth.get())
             if depth <= 0:
                 raise ValueError("Depth must be positive")
 
-            self.game = GameLogic()
-            self.ai_agent = AIAgent(self.game, depth)
-            self.game_active = True
-            self.status_var.set("Game started - Your turn!")
-            self.draw_board()
+
 
         except ValueError as e:
             self.status_var.set(f"Error: {str(e)}")
