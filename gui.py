@@ -1,181 +1,172 @@
-# import pygame
-# import sys
-#
-# # Constants for the game
-# BLUE = (0, 0, 255)
-# BLACK = (0, 0, 0)
-# RED = (255, 0, 0)
-# YELLOW = (255, 255, 0)
-#
-# SQUARE_SIZE = 100
-# RADIUS = SQUARE_SIZE // 2 - 5
-# WIDTH = 7  # Minimum width
-# HEIGHT = 6  # Minimum height
-# SCREEN_WIDTH = WIDTH * SQUARE_SIZE
-# SCREEN_HEIGHT = (HEIGHT + 1) * SQUARE_SIZE
-#
-# def draw_board(board):
-#     for row in range(HEIGHT):
-#         for col in range(WIDTH):
-#             pygame.draw.rect(screen, BLUE, (col * SQUARE_SIZE, row * SQUARE_SIZE + SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-#             pygame.draw.circle(screen, BLACK, (col * SQUARE_SIZE + SQUARE_SIZE // 2, row * SQUARE_SIZE + SQUARE_SIZE // 2 + SQUARE_SIZE), RADIUS)
-#
-#     for row in range(HEIGHT):
-#         for col in range(WIDTH):
-#             if board[row][col] == 1:
-#                 pygame.draw.circle(screen, RED, (col * SQUARE_SIZE + SQUARE_SIZE // 2, SCREEN_HEIGHT - row * SQUARE_SIZE - SQUARE_SIZE // 2), RADIUS)
-#             elif board[row][col] == 2:
-#                 pygame.draw.circle(screen, YELLOW, (col * SQUARE_SIZE + SQUARE_SIZE // 2, SCREEN_HEIGHT - row * SQUARE_SIZE - SQUARE_SIZE // 2), RADIUS)
-#     pygame.display.update()
-#
-# # Initialize the screen
-# pygame.init()
-# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-# pygame.display.set_caption("Connect Four")
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox
+import random
+import time
+from node import Node
+from alpha_beta_pruning import alpha_beta_pruning
+from minimax import maximize, minimize
+from expectiminimax import expectiminimax
+from utils import drop_disc, get_valid_moves, is_terminal, score_position
 
-import numpy as np
+ROWS = 6
+COLS = 7
+CELL_SIZE = 100
+PLAYER_PIECE = 1
+AI_PIECE = 2
 
+class ConnectFour:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Connect Four")
+        self.root.geometry("700x1000")  # Set the window size for the main menu
+        self.algorithm = None
+        self.create_main_menu()
 
-class ConnectFourGUI:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Connect Four with AI")
+    def create_main_menu(self):
+        self.clear_window()
+        self.root.configure(bg="#282c34")
+        label = tk.Label(self.root, text="Choose Algorithm", font=("Arial", 24, "bold"), fg="white", bg="#282c34")
+        label.pack(pady=20)
 
-        # Game settings
-        self.game = GameLogic()
-        self.cell_size = 60
-        self.padding = 10
+        minimax_button = tk.Button(self.root, text="Minimax", font=("Arial", 18), bg="#61afef", fg="white", command=lambda: self.start_game(1))
+        minimax_button.pack(pady=10)
 
-        # Configuration frame
-        self.config_frame = ttk.Frame(self.root, padding="10")
-        self.config_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        alpha_beta_button = tk.Button(self.root, text="Alpha-Beta Pruning", font=("Arial", 18), bg="#98c379", fg="white", command=lambda: self.start_game(2))
+        alpha_beta_button.pack(pady=10)
 
-        # Algorithm selection
-        ttk.Label(self.config_frame, text="Algorithm:").grid(row=0, column=0, padx=5)
-        self.algorithm = tk.StringVar(value="minimax")
-        algorithms = ["minimax", "alphabeta", "expectimax"]
-        self.algo_menu = ttk.OptionMenu(self.config_frame, self.algorithm, "minimax", *algorithms)
-        self.algo_menu.grid(row=0, column=1, padx=5)
+        expectiminimax_button = tk.Button(self.root, text="Expectiminimax", font=("Arial", 18), bg="#e06c75", fg="white", command=lambda: self.start_game(3))
+        expectiminimax_button.pack(pady=10)
 
-        # Depth selection
-        ttk.Label(self.config_frame, text="Depth:").grid(row=0, column=2, padx=5)
-        self.depth = tk.StringVar(value="4")
-        self.depth_entry = ttk.Entry(self.config_frame, textvariable=self.depth, width=5)
-        self.depth_entry.grid(row=0, column=3, padx=5)
+    def start_game(self, algorithm):
+        self.algorithm = algorithm
+        self.board = [[0] * COLS for _ in range(ROWS)]
+        self.current_turn = PLAYER_PIECE
+        self.create_game_board()
 
-        # Start button
-        self.start_button = ttk.Button(self.config_frame, text="Start Game", command=self.start_game)
-        self.start_button.grid(row=0, column=4, padx=5)
+    def create_game_board(self):
+        self.clear_window()
+        self.root.geometry(f"{COLS * CELL_SIZE + 20}x{ROWS * CELL_SIZE + 100}")  # Set the window size for the game board
+        self.canvas = tk.Canvas(self.root, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="#282c34", highlightthickness=0)
+        self.canvas.pack(pady=20)
 
-        # Game canvas
-        canvas_width = self.game.COLS * self.cell_size + 2 * self.padding
-        canvas_height = self.game.ROWS * self.cell_size + 2 * self.padding
-        self.canvas = tk.Canvas(self.root, width=canvas_width, height=canvas_height, bg='blue')
-        self.canvas.grid(row=1, column=0, padx=10, pady=10)
+        self.info_label = tk.Label(self.root, text="", font=("Arial", 14), fg="white", bg="#282c34")
+        self.info_label.pack(pady=10)
 
-        # Status label
-        self.status_var = tk.StringVar(value="Select algorithm and depth to start")
-        self.status_label = ttk.Label(self.root, textvariable=self.status_var)
-        self.status_label.grid(row=2, column=0, pady=5)
-
-        self.game_active = False
-        self.ai_agent = None
-
-        self.canvas.bind('<Button-1>', self.handle_click)
         self.draw_board()
-
-        self.root.mainloop()
-
-    def start_game(self):
-        try:
-            # depth = int(self.depth.get())
-            # if depth <= 0:
-            #     raise ValueError("Depth must be positive")
-            #
-            # self.game = GameLogic()
-            # self.ai_agent = AIAgent(self.game, depth)
-            # self.game_active = True
-            # self.status_var.set("Game started - Your turn!")
-            # self.draw_board()
-
-            depth = int(self.depth.get())
-            if depth <= 0:
-                raise ValueError("Depth must be positive")
-
-
-
-        except ValueError as e:
-            self.status_var.set(f"Error: {str(e)}")
+        self.canvas.bind("<Button-1>", self.human_move)
 
     def draw_board(self):
         self.canvas.delete("all")
+        for row in range(ROWS):
+            for col in range(COLS):
+                x1 = col * CELL_SIZE
+                y1 = row * CELL_SIZE
+                x2 = x1 + CELL_SIZE
+                y2 = y1 + CELL_SIZE
+                color = "white"
+                if self.board[row][col] == PLAYER_PIECE:
+                    color = "red"
+                elif self.board[row][col] == AI_PIECE:
+                    color = "yellow"
+                self.canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill=color, outline="black")
 
-        for row in range(self.game.ROWS):
-            for col in range(self.game.COLS):
-                x = col * self.cell_size + self.padding
-                y = row * self.cell_size + self.padding
-
-                # Draw cell background
-                self.canvas.create_rectangle(x, y, x + self.cell_size, y + self.cell_size,
-                                             fill='blue', outline='blue')
-
-                # Draw piece
-                piece_padding = 5
-                piece_color = 'white'
-                if self.game.board[row][col] == self.game.HUMAN:
-                    piece_color = 'red'
-                elif self.game.board[row][col] == self.game.AI:
-                    piece_color = 'yellow'
-
-                self.canvas.create_oval(x + piece_padding, y + piece_padding,
-                                        x + self.cell_size - piece_padding,
-                                        y + self.cell_size - piece_padding,
-                                        fill=piece_color, outline='black')
-
-    def handle_click(self, event):
-        if not self.game_active:
-            return
-
-        # Convert click coordinates to column
-        col = (event.x - self.padding) // self.cell_size
-
-        if 0 <= col < self.game.COLS and self.game.is_valid_move(col):
-            # Human move
-            self.game.make_move(col, self.game.HUMAN)
+    def human_move(self, event):
+        col = event.x // CELL_SIZE
+        if self.is_valid_move(col):
+            self.make_move(col, PLAYER_PIECE)
             self.draw_board()
+            if not self.check_game_over():
+                self.root.after(500, self.ai_move)
 
-            if self.game.check_win(self.game.HUMAN):
-                self.game_active = False
-                self.status_var.set("You win!")
-                return
+    def ai_move(self):
+        start_time = time.time()
+        state = self.convert_from_grid_to_string(self.board)
+        root = Node(None, state, 0, 1, 0, None)
+        if self.algorithm == 1:
+            best_move, _ = self.agent(root, 2, 1)
+        elif self.algorithm == 2:
+            best_move, _ = self.agent(root, 2, 2)
+        elif self.algorithm == 3:
+            best_move, _ = self.agent(root, 2, 3)
+        end_time = time.time()
+        execution_time = end_time - start_time
 
-            if self.game.is_board_full():
-                self.game_active = False
-                self.status_var.set("It's a draw!")
-                return
+        self.make_move(best_move, AI_PIECE)
+        self.draw_board()
+        self.info_label.config(text=f"AI Move: {best_move + 1}, Time: {execution_time:.2f} seconds")
+        self.check_game_over()
 
-            # AI move
-            self.status_var.set("AI is thinking...")
-            self.root.update()
+    def make_move(self, col, piece):
+        for row in range(ROWS-1, -1, -1):
+            if self.board[row][col] == 0:
+                self.board[row][col] = piece
+                break
 
-            ai_move = self.ai_agent.get_best_move(self.algorithm.get())
-            self.game.make_move(ai_move, self.game.AI)
-            self.draw_board()
+    def is_valid_move(self, col):
+        return self.board[0][col] == 0
 
-            if self.game.check_win(self.game.AI):
-                self.game_active = False
-                self.status_var.set("AI wins!")
-                return
+    def check_game_over(self):
+        if is_terminal(self.convert_from_grid_to_string(self.board)):
+            self.show_winner()
+            return True
+        return False
 
-            if self.game.is_board_full():
-                self.game_active = False
-                self.status_var.set("It's a draw!")
-                return
+    def show_winner(self):
+        player_score = self.calculate_score(PLAYER_PIECE)
+        ai_score = self.calculate_score(AI_PIECE)
+        winner = "Draw"
+        if player_score > ai_score:
+            winner = "You Win!"
+        elif ai_score > player_score:
+            winner = "AI Wins!"
+        messagebox.showinfo("Game Over", f"{winner}\nPlayer Score: {player_score}\nAI Score: {ai_score}")
+        self.create_main_menu()
 
-            self.status_var.set("Your turn!")
+    def calculate_score(self, piece):
+        state = self.convert_from_grid_to_string(self.board)
+        return score_position(state, str(piece))
 
+    def convert_from_grid_to_string(self, grid):
+        state = ""
+        for row in grid:
+            state += "".join(map(str, row))
+        return state
+
+    def agent(self, root, depth, option):
+        valid_moves = get_valid_moves(root.board)
+        scores = {}
+
+        for col in valid_moves:
+            child_state = drop_disc(root.board, col, AI_PIECE)
+            child_node = Node(root, child_state, 1, 2, (1 % 2) + 1, col)
+            root.children.append(child_node)
+
+            try:
+                if option == 1:
+                    score = maximize(child_node, depth, True, AI_PIECE)
+                elif option == 2:
+                    score = alpha_beta_pruning(child_node, depth, True, AI_PIECE)
+                elif option == 3:
+                    score = expectiminimax(child_node, depth, True, AI_PIECE)
+                scores[col] = score
+            except Exception as e:
+                print(f"Error processing column {col}: {e}")
+                scores[col] = float('-inf')
+
+        max_value = max(scores.values(), default=float('-inf'))
+        best_moves = [col for col, score in scores.items() if score == max_value]
+
+        if not best_moves:
+            raise ValueError("No valid moves available or all scores are invalid.")
+
+        best_move = random.choice(best_moves)
+        return best_move, root
+
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
 if __name__ == "__main__":
-    ConnectFourGUI()
+    root = tk.Tk()
+    game = ConnectFour(root)
+    root.mainloop()
