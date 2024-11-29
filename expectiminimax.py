@@ -133,8 +133,9 @@ def print_tree(node):
     
 
 if __name__ == "__main__":
-    board = "0"*7*6
-    board = "0"*7*5 + "0"*2+"1"+"22"+"1"+"0"
+    board = "0"*7*6 # optimal move is 3
+    board = "0"*7*5 + "0012210" # optimal move is 3
+    board = "0"*7*4 + "0010000" + "0012200" # optimal move is 5 to block
     # print(board[9])
     node = Node(None, board, 0, 1, 0, None)
     # player1 = 0 if ai-agent, else 1
