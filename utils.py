@@ -84,6 +84,9 @@ def evaluate_window(window, piece):
     opponent_piece = "2"
     score = 0
 
+
+
+
     # Evaluate offensive potential
     consecutive_pieces = 0
     max_consecutive_pieces = 0
