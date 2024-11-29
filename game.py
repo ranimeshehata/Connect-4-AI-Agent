@@ -1,93 +1,73 @@
 import random
 import time
-import math
-from alpha_beta_pruning import minimax_alpha_beta
+from node import Node
+from alpha_beta_pruning import alpha_beta_pruning
 from utils import drop_disc, get_valid_moves, is_terminal, score_position
 
 ROWS = 6
 COLS = 7
 
-min_tree = {}
-
 def convert_from_string_to_grid(state):
-    grid = [[0] * 7 for _ in range(6)]
-    for i in range(0, 6):
-        for j in range(0, 7):
-            grid[i][j] = int(state[i * 7 + j])
+    grid = [[0] * COLS for _ in range(ROWS)]
+    for i in range(ROWS):
+        for j in range(COLS):
+            grid[i][j] = int(state[i * COLS + j])
     return grid
 
 def convert_from_grid_to_string(grid):
     state = ""
-    for i in range(0, 6):
-        for j in range(0, 7):
+    for i in range(ROWS):
+        for j in range(COLS):
             state += str(grid[i][j])
     return state
 
 def agent(grid, depth, option):
-    min_tree.clear()
     state = convert_from_grid_to_string(grid)
-    min_tree[state] = {
-        "depth": depth,
-        "piece": 1,
-        "value": 0,
-        "childs": [],
-    }
+    root = Node(None, state, 0, 1, 0, None)  # Root node for the AI
     valid_moves = get_valid_moves(state)
-    scores = dict(
-        zip(
-            valid_moves,
-            [get_score(state, col, 2, depth, option) for col in valid_moves],
-        )
-    )
-    max_cols = [key for key in scores.keys() if scores[key] == max(scores.values())]
+    scores = {}
 
-    res = random.choice(max_cols)
-    min_tree[state]["value"] = scores[res]
-    return res, min_tree
+    # Loop through valid moves and apply alpha-beta pruning for each
+    for col in valid_moves:
+        child_state = drop_disc(state, col, 2)
+        child_node = Node(root, child_state, 1, 2, (1 % 2) + 1, col)
+        root.children.append(child_node)
+        
+        try:
+            # Correct call to alpha-beta pruning with 4 arguments
+            score = alpha_beta_pruning(child_node, depth, option == 1, 2)
+            scores[col] = score
+        except Exception as e:
+            print(f"Error processing column {col}: {e}")
+            scores[col] = float('-inf')  # Penalize invalid moves
 
-def get_score(state, col, piece, depth, option):
-    next_state = drop_disc(state, col, piece)
-    if option == 1:
-        new_dict = {
-            next_state: {
-                "depth": depth - 1,
-                "piece": piece % 2 + 1,
-                "value": 0,
-                "childs": [],
-            }
-        }
-        value = minimax_alpha_beta(next_state, depth - 1, piece % 2 + 1, False, new_dict)
-        new_dict[next_state]["value"] = value
-        min_tree[state]["childs"].append(new_dict)
-        return value
-    else:
-        new_dict = {
-            next_state: {
-                "depth": depth - 1,
-                "piece": piece % 2 + 1,
-                "value": 0,
-                "childs": [],
-            }
-        }
-        value = minimax_alpha_beta(
-            next_state, depth - 1, -math.inf, math.inf, piece % 2 + 1, False, new_dict
-        )
-        new_dict[next_state]["value"] = value
-        min_tree[state]["childs"].append(new_dict)
-        return value
+    # Find the best move(s)
+    max_value = max(scores.values(), default=float('-inf'))
+    best_moves = [col for col, score in scores.items() if score == max_value]
 
+    if not best_moves:
+        raise ValueError("No valid moves available or all scores are invalid.")
 
-def print_tree(tree, indent=0):
-    state = list(tree.keys())[0]
-    print(
-        "    " * indent
-        + f"{state} | Depth: {tree[state]['depth']}, Piece: {tree[state]['piece']}, Value: {tree[state]['value']}"
-    )
-    childs = tree[state]["childs"]
-    for child in childs:
-        print_tree(child, indent + 1)
+    best_move = random.choice(best_moves)
+    return best_move, root
 
+def print_tree(node):
+    queue = []
+    queue.append(node)
+    node_type = 0
+    while queue:
+        s = queue.pop(0)
+        if s.node_type != node_type:
+            print()
+            print("Node type changed to", s.node_type)
+            node_type = s.node_type
 
+        print(s.value, " move:", s.move, "  ", end=" ")
+
+        for child in s.children:
+            queue.append(child)
+
+# Example test case
 board = [
     [0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0],
@@ -97,14 +77,14 @@ board = [
     [1, 2, 2, 1, 1, 2, 1],
 ]
 
-
 def main():
     start = time.time()
-    Res = agent(board, 8, 2)
-    print(Res[0])
+    Res = agent(board, 2, 1)  # Assuming player1 is AI (option 1)
+    print("Best Move:", Res[0])
+    print("Tree Structure:")
+    print_tree(Res[1])  # Prints the tree of nodes explored during alpha-beta pruning
     end = time.time()
-    print(end - start)
-
+    print("Execution Time:", end - start, "seconds")
 
 if __name__ == "__main__":
     main()
