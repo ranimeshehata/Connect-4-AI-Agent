@@ -14,9 +14,17 @@ CELL_SIZE = 100
 PLAYER_PIECE = 1
 AI_PIECE = 2
 
+ALGORITHM_NAMES = {
+    1: "Minimax Pruning",
+    2: "Alpha-Beta Pruning",
+    3: "Expectiminimax"
+}
+
 class ConnectFour:
     def __init__(self, root):
         self.root = root
+        self.info_label = tk.Label(self.root, text="", font=("Helvetica", 12))
+        self.info_label.pack()
         self.root.title("Connect Four")
         self.root.geometry("700x1000")  # Set the window size for the main menu
         self.algorithm = None
@@ -90,10 +98,13 @@ class ConnectFour:
             best_move, _ = self.agent(root, 2, 3)
         end_time = time.time()
         execution_time = end_time - start_time
+        execution_time = execution_time * 1000  # Convert to milliseconds
 
         self.make_move(best_move, AI_PIECE)
         self.draw_board()
-        self.info_label.config(text=f"AI Move: {best_move + 1}, Time: {execution_time:.2f} seconds")
+        algorithm_name = ALGORITHM_NAMES.get(self.algorithm)
+        self.info_label.config(text=f"AI Best Move: {best_move + 1}, Time for AI: {execution_time:.2f} msec, Algorithm: {algorithm_name}")
+        self.info_label.update_idletasks()  # Ensure the label is updated immediately
         self.check_game_over()
 
     def make_move(self, col, piece):
