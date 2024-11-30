@@ -1,16 +1,16 @@
 import tkinter as tk
-from tkinter import messagebox
-import random
+from tkinter import messagebox, Canvas, Toplevel, Scrollbar
 import time
 from node import Node
 from alpha_beta_pruning import alpha_beta_pruning
 from minimax import maximize, minimize
 from expectiminimax import expectiminimax
 from utils import drop_disc, get_valid_moves, is_terminal, score_position
+from game import convert_from_string_to_grid, agent
 
 ROWS = 6
 COLS = 7
-CELL_SIZE = 100
+CELL_SIZE = 20  # Reduced cell size for tree display
 PLAYER_PIECE = 1
 AI_PIECE = 2
 
@@ -23,162 +23,162 @@ ALGORITHM_NAMES = {
 class ConnectFour:
     def __init__(self, root):
         self.root = root
-        self.info_label = tk.Label(self.root, text="", font=("Helvetica", 12))
-        self.info_label.pack()
         self.root.title("Connect Four")
-        self.root.geometry("700x1000")  # Set the window size for the main menu
-        self.algorithm = None
-        self.create_main_menu()
+        self.root.geometry("2200x1200")  # Set the window size for the main menu
+        self.root.configure(bg="lightgrey")
 
-    def create_main_menu(self):
-        self.clear_window()
-        self.root.configure(bg="#282c34")
-        label = tk.Label(self.root, text="Choose Algorithm", font=("Arial", 24, "bold"), fg="white", bg="#282c34")
-        label.pack(pady=20)
-
-        minimax_button = tk.Button(self.root, text="Minimax", font=("Arial", 18), bg="#61afef", fg="white", command=lambda: self.start_game(1))
-        minimax_button.pack(pady=10)
-
-        alpha_beta_button = tk.Button(self.root, text="Alpha-Beta Pruning", font=("Arial", 18), bg="#98c379", fg="white", command=lambda: self.start_game(2))
-        alpha_beta_button.pack(pady=10)
-
-        expectiminimax_button = tk.Button(self.root, text="Expectiminimax", font=("Arial", 18), bg="#e06c75", fg="white", command=lambda: self.start_game(3))
-        expectiminimax_button.pack(pady=10)
-
-    def start_game(self, algorithm):
-        self.algorithm = algorithm
-        self.board = [[0] * COLS for _ in range(ROWS)]
-        self.current_turn = PLAYER_PIECE
-        self.create_game_board()
-
-    def create_game_board(self):
-        self.clear_window()
-        extra_height = 100  # Add extra height to accommodate the info label
-        self.root.geometry(f"{COLS * CELL_SIZE + 20}x{ROWS * CELL_SIZE + 100 + extra_height}")  # Increase the window size
-        self.canvas = tk.Canvas(self.root, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="#282c34", highlightthickness=0)
-        self.canvas.pack(pady=20)
-
-        self.info_label = tk.Label(self.root, text="", font=("Arial", 14), fg="white", bg="#282c34")
+        self.info_label = tk.Label(self.root, text="", font=("Helvetica", 12), bg="lightblue", relief="solid", bd=2)
         self.info_label.pack(pady=10)
 
-        self.draw_board()
-        self.canvas.bind("<Button-1>", self.human_move)
+        self.algorithm = None
+        self.board = ["0"] * (ROWS * COLS)  # Initialize an empty board
+        self.create_main_menu()
+        self.create_board_canvas()
 
-    def draw_board(self):
-        self.canvas.delete("all")
+    def create_board_canvas(self):
+        self.canvas = Canvas(self.root, width=COLS * CELL_SIZE * 5, height=ROWS * CELL_SIZE * 5, bg="blue")
+        self.canvas.pack(pady=20)
+        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE * 5)
+
+    def draw_board(self, canvas, board, x, y, cell_size):
         for row in range(ROWS):
             for col in range(COLS):
-                x1 = col * CELL_SIZE
-                y1 = row * CELL_SIZE
-                x2 = x1 + CELL_SIZE
-                y2 = y1 + CELL_SIZE
+                x1 = x + col * cell_size
+                y1 = y + row * cell_size
+                x2 = x1 + cell_size
+                y2 = y1 + cell_size
+                piece = board[row * COLS + col]
                 color = "white"
-                if self.board[row][col] == PLAYER_PIECE:
+                if piece == "1":
                     color = "red"
-                elif self.board[row][col] == AI_PIECE:
+                elif piece == "2":
                     color = "yellow"
-                self.canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill=color, outline="black")
+                canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill=color, outline="black")
+        # Draw a frame around the board
+        canvas.create_rectangle(x, y, x + COLS * cell_size, y + ROWS * cell_size, outline="black", width=2)
 
-    def human_move(self, event):
-        col = event.x // CELL_SIZE
-        if self.is_valid_move(col):
-            self.make_move(col, PLAYER_PIECE)
-            self.draw_board()
-            if not self.check_game_over():
-                self.root.after(500, self.ai_move)
+    def set_initial_state(self, state):
+        self.board = state
+        self.info_label.config(text="Initial state set.")
+        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE * 5)
 
-    def ai_move(self):
-        start_time = time.time()
-        state = self.convert_from_grid_to_string(self.board)
-        root = Node(None, state, 0, 1, 0, None)
-        if self.algorithm == 1:
-            best_move, _ = self.agent(root, 2, 1)
-        elif self.algorithm == 2:
-            best_move, _ = self.agent(root, 2, 2)
-        elif self.algorithm == 3:
-            best_move, _ = self.agent(root, 2, 3)
-        end_time = time.time()
-        execution_time = end_time - start_time
-        execution_time = execution_time * 1000  # Convert to milliseconds
+    def calculate_next_move(self):
+        self.algorithm = self.algorithm_var.get()
+        if self.algorithm == 0:
+            messagebox.showerror("Error", "Please select an algorithm first.")
+            return
 
-        self.make_move(best_move, AI_PIECE)
-        self.draw_board()
-        algorithm_name = ALGORITHM_NAMES.get(self.algorithm)
-        self.info_label.config(text=f"AI Best Move: {best_move + 1}\nTime for AI: {execution_time:.2f} msec\nAlgorithm: {algorithm_name}")
-        self.info_label.update_idletasks()  # Ensure the label is updated immediately
-        self.check_game_over()
+        grid = convert_from_string_to_grid("".join(self.board))
+        depth = 6  # You can set this to any depth you want
+        option = self.algorithm
 
-    def make_move(self, col, piece):
-        for row in range(ROWS-1, -1, -1):
-            if self.board[row][col] == 0:
-                self.board[row][col] = piece
-                break
+        try:
+            start_time = time.time()
+            best_move, root = agent(grid, depth, option)
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            self.board = drop_disc("".join(self.board), best_move, AI_PIECE)
+            self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE * 5)
+            self.info_label.config(text=f"Next best move: {best_move} using {ALGORITHM_NAMES[option]}. \n Time taken: {elapsed_time:.4f} seconds.")
+            self.show_tree(root)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
-    def is_valid_move(self, col):
-        return self.board[0][col] == 0
+    def create_main_menu(self):
+        self.main_menu_frame = tk.Frame(self.root, bg="lightgrey", padx=20, pady=20, relief="solid", bd=2)
+        self.main_menu_frame.pack(pady=20)
 
-    def check_game_over(self):
-        if is_terminal(self.convert_from_grid_to_string(self.board)):
-            self.show_winner()
-            return True
-        return False
+        tk.Label(self.main_menu_frame, text="Select Algorithm:", font=("Helvetica", 14, "bold"), bg="lightgrey").pack(pady=10)
+        self.algorithm_var = tk.IntVar(value=0)
+        for key, value in ALGORITHM_NAMES.items():
+            tk.Radiobutton(self.main_menu_frame, text=value, variable=self.algorithm_var, value=key, font=("Helvetica", 12), bg="lightgrey").pack(anchor=tk.W)
 
-    def show_winner(self):
-        player_score = self.calculate_score(PLAYER_PIECE)
-        ai_score = self.calculate_score(AI_PIECE)
-        winner = "Draw"
-        if player_score > ai_score:
-            winner = "You Win!"
-        elif ai_score > player_score:
-            winner = "AI Wins!"
-        messagebox.showinfo("Game Over", f"{winner}\nPlayer Score: {player_score}\nAI Score: {ai_score}")
-        self.create_main_menu()
+        tk.Button(self.main_menu_frame, text="Set Initial State", command=self.show_initial_state_input, font=("Helvetica", 12), bg="lightblue", relief="raised", bd=2).pack(pady=10)
+        tk.Button(self.main_menu_frame, text="Calculate Next Move", command=self.calculate_next_move, font=("Helvetica", 12), bg="lightblue", relief="raised", bd=2).pack(pady=10)
 
-    def calculate_score(self, piece):
-        state = self.convert_from_grid_to_string(self.board)
-        return score_position(state, str(piece))
+    def show_initial_state_input(self):
+        self.initial_state_window = tk.Toplevel(self.root)
+        self.initial_state_window.title("Set Initial State")
+        self.initial_state_window.configure(bg="lightgrey")
 
-    def convert_from_grid_to_string(self, grid):
-        state = ""
-        for row in grid:
-            state += "".join(map(str, row))
-        return state
+        tk.Label(self.initial_state_window, text="Enter initial state as a string (42 characters):", font=("Helvetica", 12), bg="lightgrey").pack(pady=10)
+        self.initial_state_entry = tk.Entry(self.initial_state_window, width=50, font=("Helvetica", 12), relief="solid", bd=2)
+        self.initial_state_entry.pack(pady=10)
 
-    def agent(self, root, depth, option):
-        valid_moves = get_valid_moves(root.board)
-        scores = {}
+        tk.Button(self.initial_state_window, text="Set", command=self.set_initial_state_from_input, font=("Helvetica", 12), bg="lightblue", relief="raised", bd=2).pack(pady=10)
 
-        for col in valid_moves:
-            child_state = drop_disc(root.board, col, AI_PIECE)
-            child_node = Node(root, child_state, 1, 2, (1 % 2) + 1, col)
-            root.children.append(child_node)
+    def set_initial_state_from_input(self):
+        state = self.initial_state_entry.get()
+        if len(state) != ROWS * COLS:
+            messagebox.showerror("Error", "Invalid state length. Must be 42 characters.")
+            return
 
-            try:
-                if option == 1:
-                    score = maximize(child_node, depth, True, AI_PIECE)
-                elif option == 2:
-                    score = alpha_beta_pruning(child_node, depth, True, AI_PIECE)
-                elif option == 3:
-                    score = expectiminimax(child_node, depth, True, AI_PIECE)
-                scores[col] = score
-            except Exception as e:
-                print(f"Error processing column {col}: {e}")
-                scores[col] = float('-inf')
+        self.set_initial_state(state)
+        self.initial_state_window.destroy()
 
-        max_value = max(scores.values(), default=float('-inf'))
-        best_moves = [col for col, score in scores.items() if score == max_value]
+    def show_tree(self, root):
+        # Create a new window for the tree structure
+        tree_window = Toplevel(self.root)
+        tree_window.title("Tree Structure")
+        tree_window.geometry("1000x1000")
+        tree_window.configure(bg="lightgrey")
 
-        if not best_moves:
-            raise ValueError("No valid moves available or all scores are invalid.")
+        # Add a canvas with scrollbars
+        canvas_frame = tk.Frame(tree_window)
+        canvas_frame.pack(fill=tk.BOTH, expand=True)
 
-        best_move = random.choice(best_moves)
-        return best_move, root
+        h_scroll = Scrollbar(canvas_frame, orient=tk.HORIZONTAL)
+        h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
 
-    def clear_window(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
+        v_scroll = Scrollbar(canvas_frame, orient=tk.VERTICAL)
+        v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        canvas = Canvas(canvas_frame, bg="white", xscrollcommand=h_scroll.set, yscrollcommand=v_scroll.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        h_scroll.config(command=canvas.xview)
+        v_scroll.config(command=canvas.yview)
+
+        # Set the scrollable area of the canvas
+        canvas.config(scrollregion=(0, 0, 5000, 5000))
+
+        # Draw the tree on the canvas
+        self.draw_tree(canvas, root, 2500, 50, 500)
+
+    def draw_tree(self, canvas, node, x, y, x_offset):
+        """
+        Draw the tree structure with improved spacing and prevent overlap of nodes.
+        """
+        # Draw the node's board
+        self.draw_board(canvas, node.board, x, y, CELL_SIZE)
+
+        # Draw the node's score below the board
+        canvas.create_text(x + CELL_SIZE * COLS / 2, y + CELL_SIZE * ROWS + 20, text=str(node.value), fill="black")
+
+        if node.children:
+            num_children = len(node.children)
+            # Calculate spacing dynamically based on the number of children
+            child_spacing = max(x_offset // num_children, CELL_SIZE * 2 * COLS)
+
+            for i, child in enumerate(node.children):
+                # Calculate child node position
+                child_x = x - (child_spacing * (num_children - 1) / 2) + i * child_spacing
+                child_y = y + 300
+
+                # Draw a line to the child node
+                canvas.create_line(
+                    x + CELL_SIZE * COLS / 2,
+                    y + CELL_SIZE * ROWS,
+                    child_x + CELL_SIZE * COLS / 2,
+                    child_y,
+                    fill="black",
+                )
+
+                # Recursively draw the child nodes with reduced spacing
+                self.draw_tree(canvas, child, child_x, child_y, x_offset // 2)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
-    game = ConnectFour(root)
+    app = ConnectFour(root)
     root.mainloop()

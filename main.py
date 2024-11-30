@@ -6,7 +6,7 @@ import time
 
 def main():
     board = "0"*7*4 + "0110000" + "0122200" # optimal move is 0
-    k = 4
+    k = 7
     player1 = 0
     turn = 1
     
@@ -30,7 +30,8 @@ def main():
     print(node2.value)
     print("best move ", node2.max_child.move)
 
-
+    print(board)
+    # 000000000000000000000000000001100000122200
 
 
 

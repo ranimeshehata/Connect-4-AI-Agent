@@ -2,7 +2,7 @@ import random
 import time
 from node import Node
 from alpha_beta_pruning import alpha_beta_pruning
-from minimax import maximize, minimize
+from minimax import minimax
 from expectiminimax import expectiminimax
 from utils import drop_disc, get_valid_moves, is_terminal, score_position
 
@@ -36,13 +36,17 @@ def agent(grid, depth, option):
         root.children.append(child_node)
         
         try:
+            start = time.time()
             if option == 1:
                 score = alpha_beta_pruning(child_node, depth, True, 2)
-            # elif option == 2:
-            #     score = maximize(child_node, depth, True, 2, float('-inf'), float('inf'))
+            elif option == 2:
+                 score = minimax(child_node, depth, True, 2)
             elif option == 3:
                 score = expectiminimax(child_node, depth, True, 2)
+            end = time.time()
+            print(f"Time taken for column {col} using {option}: {end - start:.4f} seconds")
             scores[col] = score
+            
         except Exception as e:
             print(f"Error processing column {col}: {e}")
             scores[col] = float('-inf')  # Penalize invalid moves
