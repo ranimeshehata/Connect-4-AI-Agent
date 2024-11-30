@@ -11,23 +11,26 @@ from utils import score_position, is_valid_move, get_valid_moves, is_terminal, d
 # 2. if sides are 
 # node (self, parent, board, depth, node_type, player, move)
 
-def maximize(node, k, player1, turn, tree_root):
+def maximize(node, k, player1, turn, tree_root, cached_dict):
     
     valid_moves = get_valid_moves(node.board)
-    if node.depth == k or valid_moves == []:
+    if node.depth == k or valid_moves == [] or is_terminal(node.board):
+        if node.board in cached_dict:
+            node.value = cached_dict[node.board]
+            return node.value
         score = score_position(node.board, str(turn))
         node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        cached_dict[node.board] = node.value
         return node.value
     
+    max_value = -math.inf
+    max_child = None
     for move in valid_moves:
         child_state = drop_disc(node.board, move, turn)
         child = Node(node, child_state, node.depth, 3, turn, move)  # not increasing depth, as it is chance node
         node.children.append(child)
 
-    max_value = -math.inf
-    max_child = None
-    for child in node.children:
-        value = chance_node(child, k, player1, turn, tree_root, child.move)
+        value = chance_node(child, k, player1, turn, tree_root, child.move, cached_dict)
         if value > max_value:
             max_value = value
             max_child = child
@@ -36,24 +39,26 @@ def maximize(node, k, player1, turn, tree_root):
     return node.value
 
 
-def minimize(node, k, player1, turn, tree_root):
+def minimize(node, k, player1, turn, tree_root, cached_dict):
 
     valid_moves = get_valid_moves(node.board)
-    if node.depth == k or valid_moves == []:
+    if node.depth == k or valid_moves == [] or is_terminal(node.board):
+        if node.board in cached_dict:
+            node.value = cached_dict[node.board]
+            return node.value
         score = score_position(node.board, str(turn))
         node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        cached_dict[node.board] = node.value
         return node.value
     
+    min_value = math.inf
+    min_child = None
     for move in valid_moves:
         child_state = drop_disc(node.board, move, turn)
         child = Node(node, child_state, node.depth, 3, turn, move)  # not increasing depth, as it is chance node
         node.children.append(child)
     
-    min_value = math.inf
-    min_child = None
-    for child in node.children:
-        child.node_type = 3
-        value = chance_node(child, k, player1, turn, tree_root, child.move)
+        value = chance_node(child, k, player1, turn, tree_root, child.move, cached_dict)
         if value < min_value:
             min_value = value
             min_child = child
@@ -63,7 +68,10 @@ def minimize(node, k, player1, turn, tree_root):
 
 
 def expectiminimax(node, k, player1, turn):
-    return maximize(node, k, player1, turn, node)
+    if k % 2 != 0:
+        k += 1
+    cached_dict = {}
+    return maximize(node, int(k//2), player1, turn, node, cached_dict)
     
 
 def get_node_by_move(parent_node, move):
@@ -74,7 +82,7 @@ def get_children(node):
     # return children
     return []
 
-def chance_node(node, k, player1, turn, tree_root, move):
+def chance_node(node, k, player1, turn, tree_root, move, cached_dict):
     # if node.depth == k:
     #     node.value = score_position(node.board, player1) #evaluate children better
     #     return node
@@ -93,7 +101,7 @@ def chance_node(node, k, player1, turn, tree_root, move):
         node.children.append(right_child)
     
     expected_value = 0
-    main_child_value = maximize(main_child, k, player1, (turn)%2 + 1, tree_root) if node_type == 1 else minimize(main_child, k, player1, (turn)%2 + 1, tree_root)
+    main_child_value = maximize(main_child, k, player1, (turn)%2 + 1, tree_root, cached_dict) if node_type == 1 else minimize(main_child, k, player1, (turn)%2 + 1, tree_root, cached_dict)
     
     if len(node.children) == 1:
         node.value = main_child_value
@@ -105,9 +113,9 @@ def chance_node(node, k, player1, turn, tree_root, move):
         if child == main_child:
             continue
         if node_type == 1:
-            value = maximize(child, k, player1, (turn)%2 + 1, tree_root)
+            value = maximize(child, k, player1, (turn)%2 + 1, tree_root, cached_dict)
         else:
-            value = minimize(child, k, player1, (turn)%2 + 1, tree_root)
+            value = minimize(child, k, player1, (turn)%2 + 1, tree_root, cached_dict)
         expected_value += (value * probability)
     
     expected_value += main_child_value * (1 - 0.4)

@@ -3,13 +3,17 @@ from utils import score_position, is_valid_move, get_valid_moves, is_terminal, d
 import math
 import time
 
-def maximize(node, k, player1, turn, alpha, beta):
+def maximize(node, k, player1, turn, alpha, beta, cached_dict):
     valid_moves = get_valid_moves(node.board)
     
     # Terminal condition: maximum depth, no moves, or terminal game state, return heuristic value
     if node.depth == k or valid_moves == [] or is_terminal(node.board):
+        if node.board in cached_dict:
+            node.value = cached_dict[node.board]
+            return node.value
         score = score_position(node.board, str(turn))
-        node.value = -1 * score if player1 else score
+        node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        cached_dict[node.board] = node.value
         return node.value
     
     max_value = -math.inf
@@ -20,7 +24,7 @@ def maximize(node, k, player1, turn, alpha, beta):
         child_node = Node(node, child_board, node.depth + 1, 2, turn, move)
         node.children.append(child_node)
         
-        value = minimize(child_node, k, player1, (turn % 2) + 1, alpha, beta)
+        value = minimize(child_node, k, player1, (turn % 2) + 1, alpha, beta, cached_dict)
         
         if value > max_value:
             max_value = value
@@ -34,13 +38,17 @@ def maximize(node, k, player1, turn, alpha, beta):
     node.max_child = max_child
     return node.value
 
-def minimize(node, k, player1, turn, alpha, beta):
+def minimize(node, k, player1, turn, alpha, beta, cached_dict):
     valid_moves = get_valid_moves(node.board)
     
     # Terminal condition: maximum depth, no moves, or terminal game state, return heuristic value
     if node.depth == k or valid_moves == [] or is_terminal(node.board):
+        if node.board in cached_dict:
+            node.value = cached_dict[node.board]
+            return node.value
         score = score_position(node.board, str(turn))
-        node.value = -1 * score if player1 else score
+        node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        cached_dict[node.board] = node.value
         return node.value
     
     min_value = math.inf
@@ -51,7 +59,7 @@ def minimize(node, k, player1, turn, alpha, beta):
         child_node = Node(node, child_board, node.depth + 1, 1, turn, move)
         node.children.append(child_node)
         
-        value = maximize(child_node, k, player1, (turn % 2) + 1, alpha, beta)
+        value = maximize(child_node, k, player1, (turn % 2) + 1, alpha, beta, cached_dict)
         
         if value < min_value:
             min_value = value
@@ -66,7 +74,8 @@ def minimize(node, k, player1, turn, alpha, beta):
     return node.value
 
 def alpha_beta_pruning(node, k, player1, turn):
-    return maximize(node, k, player1, turn, -math.inf, math.inf)
+    cached_dict = {}
+    return maximize(node, k, player1, turn, -math.inf, math.inf, cached_dict)
 
 # Print tree level by level
 def print_tree(node):

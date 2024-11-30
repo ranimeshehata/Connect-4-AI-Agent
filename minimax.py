@@ -2,22 +2,25 @@ import math
 from node import Node
 from utils import score_position, is_valid_move, get_valid_moves, is_terminal, drop_disc
 
-def maximize(node, k, player1, turn):
-    if node.depth == k or is_terminal(node.board):
-        score = score_position(node.board, str(turn))
-        node.value = -1*score if player1 else score             #if player1 = 0 then it is the ai-agent
-        return node.value
-
+def maximize(node, k, player1, turn, cached_dict):
     valid_moves = get_valid_moves(node.board)
-    for move in valid_moves:
-        child_state = drop_disc(node.board, move, turn)
-        child = Node(node, child_state, node.depth+1, 2, 3-turn, move)
-        node.children.append(child)
+    if node.depth == k or valid_moves == [] or is_terminal(node.board):
+        if node.board in cached_dict:
+            node.value = cached_dict[node.board]
+            return node.value
+        score = score_position(node.board, str(turn))
+        node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        cached_dict[node.board] = node.value
+        return node.value
 
     max_value = -math.inf
     max_child = None
-    for child in node.children:
-        value = minimize(child, k, player1, 3-turn)       #turn?????????
+    for move in valid_moves:
+        child_state = drop_disc(node.board, move, turn)
+        child = Node(node, child_state, node.depth+1, 2, turn, move)
+        node.children.append(child)
+
+        value = minimize(child, k, player1, (turn % 2) + 1, cached_dict)       #turn?????????
         if value > max_value:
             max_value = value
             max_child = child
@@ -27,22 +30,25 @@ def maximize(node, k, player1, turn):
     return node.value
 
 
-def minimize(node, k, player1, turn):
-    if node.depth == k or is_terminal(node.board):
-        score = score_position(node.board, str(turn))
-        node.value = -1*score if player1 else score
-        return node.value
-
+def minimize(node, k, player1, turn, cached_dict):
     valid_moves = get_valid_moves(node.board)
-    for move in valid_moves:
-        child_state = drop_disc(node.board, move, turn)
-        child = Node(node, child_state, node.depth+1, 1, 3-turn, move)
-        node.children.append(child)
-
+    if node.depth == k or valid_moves == [] or is_terminal(node.board):
+        if node.board in cached_dict:
+            node.value = cached_dict[node.board]
+            return node.value
+        score = score_position(node.board, str(turn))
+        node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        cached_dict[node.board] = node.value
+        return node.value
+    
     min_value = math.inf
     min_child = None
-    for child in node.children:
-        value = maximize(child, k, player1, 3-turn)
+    for move in valid_moves:
+        child_state = drop_disc(node.board, move, turn)
+        child = Node(node, child_state, node.depth+1, 1, turn, move)
+        node.children.append(child)
+
+        value = maximize(child, k, player1, (turn % 2) + 1, cached_dict)
         if value < min_value:
             min_value = value
             min_child = child
@@ -52,7 +58,8 @@ def minimize(node, k, player1, turn):
     return node.value
 
 def minimax(node, k, player1, turn):
-        return maximize(node, k, player1, turn)
+    cached_dict = {}
+    return maximize(node, k, player1, turn, cached_dict)
 
 def print_tree(node):
     queue = []
