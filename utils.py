@@ -31,6 +31,8 @@ def get_valid_moves(state):
     for i in range(7):
         if is_valid_move(state, i):
             valid_moves.append(i)
+    # center is 3, prioritize it
+    valid_moves.sort(key=lambda x: abs(x - 3))
     return valid_moves
 
 def is_terminal(state):
@@ -53,6 +55,8 @@ def score_position(state, piece):
         for c in range(cols - 3):
             start = r * cols + c
             window = state[start : start + 4]
+            if(window.count("0") == 4):
+                continue
             score += evaluate_window(window, piece)
 
     # Score vertical
@@ -60,6 +64,8 @@ def score_position(state, piece):
         for r in range(rows - 3):
             start = r * cols + c
             window = state[start : start + 4 * cols : cols]
+            if(window.count("0") == 4):
+                continue
             score += evaluate_window(window, piece)
 
     # Score positively sloped diagonals
@@ -67,6 +73,8 @@ def score_position(state, piece):
         for c in range(cols - 3):
             start = r * cols + c
             window = [state[start - i * (cols - 1)] for i in range(4)]
+            if(window.count("0") == 4):
+                continue
             score += evaluate_window(window, piece)
 
     # Score negatively sloped diagonals
@@ -74,6 +82,8 @@ def score_position(state, piece):
         for c in range(3, cols):
             start = r * cols + c
             window = [state[start - i * (cols + 1)] for i in range(4)]
+            if(window.count("0") == 4):
+                continue
             score += evaluate_window(window, piece)
 
     return score

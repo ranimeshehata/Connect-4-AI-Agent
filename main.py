@@ -5,8 +5,12 @@ from node import Node
 import time
 
 def main():
-    board = "0"*7*4 + "0110000" + "0122200" # optimal move is 0
-    k = 7
+    board = "0"*7*6 # optimal move is 
+    # board = "0"*7*4 + "0110000" + "0122200" # optimal move is 5
+    # board = "0"*7*4 + "0002000" + "0111220" # optimal move is 0
+    # board = "0"*7*3 + "0000100" + "20012200" + "1111222" # optimal move is 3
+    # board = "0"*7*3 + "0001000" + "20012200" + "1111222" # optimal move is 3
+    k = 10
     player1 = 0
     turn = 1
     
@@ -17,20 +21,20 @@ def main():
     print("Alpha beta pruning")
     print(node.value)
     print("best move ", node.max_child.move)
-    print_best_moves(node)
+    # print_best_moves(node)
     print("Time taken: ", end-start)
     # print_tree(node)
     
-    node2 = Node(None, board, 0, 1, 0, None)
-    t1 = time.time()
-    expectiminimax(node2, 3, player1, turn)
-    t2 = time.time()
-    print("Time taken for expectiminimax: ", t2-t1)
-    print("Expectiminimax")
-    print(node2.value)
-    print("best move ", node2.max_child.move)
+    # node2 = Node(None, board, 0, 1, 0, None)
+    # t1 = time.time()
+    # expectiminimax(node2, 3, player1, turn)
+    # t2 = time.time()
+    # print("Time taken for expectiminimax: ", t2-t1)
+    # print("Expectiminimax")
+    # print(node2.value)
+    # print("best move ", node2.max_child.move)
 
-    print(board)
+    # print(board)
     # 000000000000000000000000000001100000122200
 
 
