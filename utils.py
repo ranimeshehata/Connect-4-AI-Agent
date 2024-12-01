@@ -104,7 +104,8 @@ def evaluate_window(window, piece):
             continue
         elif i == "0":
             free_slots += 1
-        consecutive_pieces = 0
+        else:
+            consecutive_pieces = 0
 
 
     if consecutive_pieces == 4:
@@ -127,7 +128,8 @@ def evaluate_window(window, piece):
             continue
         elif i == "0":
             free_slots += 1
-        opponent_consecutive = 0
+        else:
+            opponent_consecutive = 0
 
     if opponent_consecutive == 4:
         score -= 500000  # Block opponent's win condition
