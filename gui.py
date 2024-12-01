@@ -46,8 +46,17 @@ class ConnectFour:
         self.canvas = Canvas(self.main_frame, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="blue")
         self.canvas.grid(row=0, column=1, padx=20, pady=20)
         self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE)
+    
+    def assign_piece_values(self):
+        global AI_PIECE, PLAYER_PIECE
+        if self.player1_is_ai.get():
+            AI_PIECE, PLAYER_PIECE = 1, 2
+        else:
+            AI_PIECE, PLAYER_PIECE = 2, 1
+
 
     def draw_board(self, canvas, board, x, y, cell_size):
+        
         for row in range(ROWS):
             for col in range(COLS):
                 x1 = x + col * cell_size
@@ -55,21 +64,30 @@ class ConnectFour:
                 x2 = x1 + cell_size
                 y2 = y1 + cell_size
                 piece = board[row * COLS + col]
+                print(piece)
                 color = "white"
-                if piece == "1":
-                    color = "red"
-                elif piece == "2":
-                    color = "yellow"
+                if AI_PIECE == 1:
+                    if piece == "2":
+                        color = "yellow"
+                    elif piece == "1":
+                        color = "red"
+                elif AI_PIECE == 2:
+                    if piece == "2":
+                        color = "red"
+                    elif piece == "1":
+                        color = "yellow"
                 canvas.create_oval(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill=color, outline="black")
         # Draw a frame around the board
         canvas.create_rectangle(x, y, x + COLS * cell_size, y + ROWS * cell_size, outline="black", width=2)
 
     def set_initial_state(self, state):
+        self.assign_piece_values()
         self.board = state
         self.info_label.config(text="Initial state set.")
         self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE)
 
     def calculate_next_move(self):
+        self.assign_piece_values()
         self.algorithm = self.algorithm_var.get()
         if self.algorithm == 0:
             messagebox.showerror("Error", "Please select an algorithm first.")
