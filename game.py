@@ -64,16 +64,6 @@ def agent(grid, depth, option, player1_is_ai):
     best_move = random.choice(best_moves)
     return best_move, root
 
-    # Find the best move(s)
-    max_value = max(scores.values(), default=float('-inf'))
-    best_moves = [col for col, score in scores.items() if score == max_value]
-
-    if not best_moves:
-        raise ValueError("No valid moves available or all scores are invalid.")
-
-    best_move = random.choice(best_moves)
-    return best_move, root
-
 def count_connected_fours(grid, piece):
     count = 0
     # Check horizontal locations for a win
