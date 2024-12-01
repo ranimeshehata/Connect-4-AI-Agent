@@ -97,7 +97,7 @@ class ConnectFour:
             self.root_node = root  # Save the root node for tree trace
             self.root.after(1000, self.human_turn)  # Allow human to play after AI move
         except Exception as e:
-            messagebox.showerror("Board is full, Game over.")
+            messagebox.showerror("Error", "Board is full, Game over.")
 
     def human_turn(self):
         self.info_label.config(text=self.info_label.cget("text") + "\nHuman's turn. Click on a column to drop your disc.")
