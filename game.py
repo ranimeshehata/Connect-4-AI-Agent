@@ -25,43 +25,20 @@ def convert_from_grid_to_string(grid):
 
 def agent(grid, depth, option, player1_is_ai):
     state = convert_from_grid_to_string(grid)
-    root = Node(None, state, 0, 1, 0, None)  # Root node for the AI
-    valid_moves = get_valid_moves(state)
-    scores = {}
+    root = Node(None, state, 0, 1, 0, None)  
+    
+    start = time.time()
+    if option == 1:
+        score = alpha_beta_pruning(root, depth, player1_is_ai, 1)
+    elif option == 2:
+        score = minimax(root, depth, player1_is_ai, 1)
+    elif option == 3:
+        score = expectiminimax(root, depth, player1_is_ai, 1)
+    end = time.time()
+    print(f"Time taken for algorithm: {end - start:.4f} seconds")
+    
 
-    # Determine the AI piece based on player1_is_ai
-    ai_piece = 1 if player1_is_ai else 2
-
-    # Loop through valid moves and apply alpha-beta pruning for each
-    for col in valid_moves:
-        child_state = drop_disc(state, col, ai_piece)
-        child_node = Node(root, child_state, 1, ai_piece, (ai_piece % 2) + 1, col)
-        root.children.append(child_node)
-        
-        try:
-            start = time.time()
-            if option == 1:
-                score = alpha_beta_pruning(child_node, depth, True, ai_piece)
-            elif option == 2:
-                score = minimax(child_node, depth, True, ai_piece)
-            elif option == 3:
-                score = expectiminimax(child_node, depth, True, ai_piece)
-            end = time.time()
-            print(f"Time taken for column {col} using {option}: {end - start:.4f} seconds")
-            scores[col] = score
-            
-        except Exception as e:
-            print(f"Error processing column {col}: {e}")
-            scores[col] = float('-inf')  # Penalize invalid moves
-
-    # Find the best move(s)
-    max_value = max(scores.values(), default=float('-inf'))
-    best_moves = [col for col, score in scores.items() if score == max_value]
-
-    if not best_moves:
-        raise ValueError("No valid moves available or all scores are invalid.")
-
-    best_move = random.choice(best_moves)
+    best_move = root.max_child.move
     return best_move, root
 
 def count_connected_fours(grid, piece):
