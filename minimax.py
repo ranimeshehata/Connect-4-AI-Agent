@@ -8,8 +8,9 @@ def maximize(node, k, player1, turn, cached_dict):
         if node.board in cached_dict:
             node.value = cached_dict[node.board]
             return node.value
-        score = score_position(node.board, str(turn))
-        node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        piece = "1" if player1 else "2"
+        score = score_position(node.board, piece) # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        node.value = score
         cached_dict[node.board] = node.value
         return node.value
 
@@ -36,8 +37,9 @@ def minimize(node, k, player1, turn, cached_dict):
         if node.board in cached_dict:
             node.value = cached_dict[node.board]
             return node.value
-        score = score_position(node.board, str(turn))
-        node.value =  -1*score if player1 else score  # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        piece = "1" if player1 else "2"
+        score = score_position(node.board, piece) # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        node.value = score
         cached_dict[node.board] = node.value
         return node.value
     

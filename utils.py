@@ -89,13 +89,9 @@ def score_position(state, piece):
     return score
 
 def evaluate_window(window, piece):
-    # opponent_piece = "1" if piece == "2" else "2"
-    piece = "1"
-    opponent_piece = "2"
+    opponent_piece = "1" if piece == "2" else "2"
+   
     score = 0
-
-
-
 
     # Evaluate offensive potential
     consecutive_pieces = 0
@@ -134,7 +130,7 @@ def evaluate_window(window, piece):
         opponent_consecutive = 0
 
     if opponent_consecutive == 4:
-        score -= 5000000  # Block opponent's win condition
+        score -= 500000  # Block opponent's win condition
     elif opponent_consecutive == 3 and free_slots == 1:
         score -= 400000  # Block opponent's strong winning opportunity
     elif opponent_consecutive == 2 and free_slots == 2:
