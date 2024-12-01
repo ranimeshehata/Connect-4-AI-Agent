@@ -16,7 +16,7 @@ PLAYER_PIECE = 2
 AI_PIECE = 1
 
 ALGORITHM_NAMES = {
-    1: "Minimax Pruning",
+    1: "Minimax without Pruning",
     2: "Alpha-Beta Pruning",
     3: "Expectiminimax"
 }
