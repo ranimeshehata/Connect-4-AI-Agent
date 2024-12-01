@@ -73,6 +73,10 @@ def expectiminimax(node, k, player1, turn):
     if k % 2 != 0:
         k += 1
     cached_dict = {}
+    if player1:
+        turn = 1
+    else:
+        turn = 2
     return maximize(node, int(k//2), player1, turn, node, cached_dict)
     
 

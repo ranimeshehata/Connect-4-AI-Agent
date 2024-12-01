@@ -61,6 +61,10 @@ def minimize(node, k, player1, turn, cached_dict):
 
 def minimax(node, k, player1, turn):
     cached_dict = {}
+    if player1:
+        turn = 1
+    else:
+        turn = 2
     return maximize(node, k, player1, turn, cached_dict)
 
 def print_tree(node):

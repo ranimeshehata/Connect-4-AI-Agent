@@ -77,6 +77,10 @@ def minimize(node, k, player1, turn, alpha, beta, cached_dict):
 
 def alpha_beta_pruning(node, k, player1, turn):
     cached_dict = {}
+    if player1:
+        turn = 1
+    else:
+        turn = 2
     return maximize(node, k, player1, turn, -math.inf, math.inf, cached_dict)
 
 # Print tree level by level
