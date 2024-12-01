@@ -11,7 +11,7 @@ from game import convert_from_string_to_grid, agent, count_connected_fours
 ROWS = 6
 COLS = 7
 CELL_SIZE = 120
-CELL_SIZE_TREE = 30
+CELL_SIZE_TREE = 15
 PLAYER_PIECE = 2
 AI_PIECE = 1
 
@@ -64,7 +64,6 @@ class ConnectFour:
                 x2 = x1 + cell_size
                 y2 = y1 + cell_size
                 piece = board[row * COLS + col]
-                print(piece)
                 color = "white"
                 if AI_PIECE == 1:
                     if piece == "2":
@@ -171,19 +170,22 @@ class ConnectFour:
         self.initial_state_window.destroy()
 
     def show_tree(self, root):
+        if root is None:
+            messagebox.showerror("Error", "Tree trace is unavailable. Please run an algorithm first.")
+            return
+
         # Create a new window for the tree structure
         tree_window = Toplevel(self.root)
         tree_window.title("Tree Structure")
-        tree_window.geometry("1000x1000")
+        tree_window.geometry("1200x1000")
         tree_window.configure(bg="lightgrey")
 
-        # Add a canvas with scrollbars
+        # Add canvas with scrollbars
         canvas_frame = tk.Frame(tree_window)
         canvas_frame.pack(fill=tk.BOTH, expand=True)
 
         h_scroll = Scrollbar(canvas_frame, orient=tk.HORIZONTAL)
         h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
-
         v_scroll = Scrollbar(canvas_frame, orient=tk.VERTICAL)
         v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -193,41 +195,55 @@ class ConnectFour:
         h_scroll.config(command=canvas.xview)
         v_scroll.config(command=canvas.yview)
 
-        # Set the scrollable area of the canvas
-        canvas.config(scrollregion=(0, 0, 5000, 5000))
+        # Dynamic scroll region
+        max_depth = self.get_tree_depth(root)
+        width = max(1000, 100 * (2 ** max_depth))  # Dynamically handle large tree widths
+        height = 300 * (max_depth + 1)
+        canvas.config(scrollregion=(0, 0, width, height))
 
-        # Draw the tree on the canvas
-        self.draw_tree(canvas, root, 2500, 50, 500)
+
+        self.draw_tree(canvas, root, width // 2, 50, width // 4)
 
     def draw_tree(self, canvas, node, x, y, x_offset):
-        
-        # Draw the node's board
+        # Draw the current node's board
         self.draw_board(canvas, node.board, x, y, CELL_SIZE_TREE)
 
         # Draw the node's score below the board
-        canvas.create_text(x + CELL_SIZE_TREE * COLS / 2, y + CELL_SIZE_TREE * ROWS + 20, text=str(node.value), fill="black")
+        canvas.create_text(
+            x + CELL_SIZE_TREE * COLS / 2,
+            y + CELL_SIZE_TREE * ROWS + 20,
+            text=f"Score: {node.value}",
+            fill="black"
+        )
 
         if node.children:
             num_children = len(node.children)
-            # Calculate spacing dynamically based on the number of children
-            child_spacing = max(x_offset // num_children, CELL_SIZE_TREE * 2 * COLS)
+            # Determine space per child based on available width
+            total_width = x_offset * 2
+            child_spacing = total_width // max(num_children - 1, 1)
 
             for i, child in enumerate(node.children):
-                # Calculate child node position
-                child_x = x - (child_spacing * (num_children - 1) / 2) + i * child_spacing
+                # Calculate the position for each child node
+                child_x = x - x_offset + i * child_spacing
                 child_y = y + 300
 
-                # Draw a line to the child node
+                # Draw line from parent to child
                 canvas.create_line(
                     x + CELL_SIZE_TREE * COLS / 2,
                     y + CELL_SIZE_TREE * ROWS,
                     child_x + CELL_SIZE_TREE * COLS / 2,
                     child_y,
-                    fill="black",
+                    fill="black"
                 )
 
-                # Recursively draw the child nodes with reduced spacing
+                # Recursively draw child nodes
                 self.draw_tree(canvas, child, child_x, child_y, x_offset // 2)
+
+
+    def get_tree_depth(self, node):
+        if not node.children:
+            return 1
+        return 1 + max(self.get_tree_depth(child) for child in node.children)
 
     def view_tree_trace(self):
         self.show_tree(self.root_node)
