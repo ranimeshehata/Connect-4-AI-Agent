@@ -5,14 +5,15 @@ from node import Node
 from alpha_beta_pruning import alpha_beta_pruning
 from minimax import maximize, minimize
 from expectiminimax import expectiminimax
-from utils import drop_disc, get_valid_moves, is_terminal, score_position
-from game import convert_from_string_to_grid, agent
+from utils import drop_disc, get_valid_moves, is_terminal, score_position, is_valid_move
+from game import convert_from_string_to_grid, agent, count_connected_fours
 
 ROWS = 6
 COLS = 7
-CELL_SIZE = 20  # Reduced cell size for tree display
-PLAYER_PIECE = 1
-AI_PIECE = 2
+CELL_SIZE = 120
+CELL_SIZE_TREE = 30
+PLAYER_PIECE = 2
+AI_PIECE = 1
 
 ALGORITHM_NAMES = {
     1: "Minimax Pruning",
@@ -24,21 +25,27 @@ class ConnectFour:
     def __init__(self, root):
         self.root = root
         self.root.title("Connect Four")
-        self.root.geometry("2200x1200")  # Set the window size for the main menu
+        # Set the window size for the main menu
+        self.root.geometry("1200x1000")  
         self.root.configure(bg="lightgrey")
-
-        self.info_label = tk.Label(self.root, text="", font=("Helvetica", 12), bg="lightblue", relief="solid", bd=2)
-        self.info_label.pack(pady=10)
 
         self.algorithm = None
         self.board = ["0"] * (ROWS * COLS)  # Initialize an empty board
+        self.player1_is_ai = tk.BooleanVar(value=True)  # Default to AI as Player 1
+
+        self.main_frame = tk.Frame(self.root, bg="lightgrey")
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+
         self.create_main_menu()
         self.create_board_canvas()
 
+        self.info_label = tk.Label(self.main_frame, text="", font=("Helvetica", 12), bg="lightblue", relief="solid", bd=2)
+        self.info_label.grid(row=1, column=1, pady=10)
+
     def create_board_canvas(self):
-        self.canvas = Canvas(self.root, width=COLS * CELL_SIZE * 5, height=ROWS * CELL_SIZE * 5, bg="blue")
-        self.canvas.pack(pady=20)
-        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE * 5)
+        self.canvas = Canvas(self.main_frame, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="blue")
+        self.canvas.grid(row=0, column=1, padx=20, pady=20)
+        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE)
 
     def draw_board(self, canvas, board, x, y, cell_size):
         for row in range(ROWS):
@@ -60,7 +67,7 @@ class ConnectFour:
     def set_initial_state(self, state):
         self.board = state
         self.info_label.config(text="Initial state set.")
-        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE * 5)
+        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE)
 
     def calculate_next_move(self):
         self.algorithm = self.algorithm_var.get()
@@ -69,32 +76,61 @@ class ConnectFour:
             return
 
         grid = convert_from_string_to_grid("".join(self.board))
-        depth = 6  # You can set this to any depth you want
+        depth = 6  # k
         option = self.algorithm
+        player1_is_ai = self.player1_is_ai.get()
 
         try:
             start_time = time.time()
-            best_move, root = agent(grid, depth, option)
+            best_move, root = agent(grid, depth, option, player1_is_ai)
             end_time = time.time()
             elapsed_time = end_time - start_time
             self.board = drop_disc("".join(self.board), best_move, AI_PIECE)
-            self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE * 5)
-            self.info_label.config(text=f"Next best move: {best_move} using {ALGORITHM_NAMES[option]}. \n Time taken: {elapsed_time:.4f} seconds.")
-            self.show_tree(root)
+            self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE)
+            
+            # Count connected fours
+            grid = convert_from_string_to_grid("".join(self.board))
+            ai_connected_fours = count_connected_fours(grid, AI_PIECE)
+            player_connected_fours = count_connected_fours(grid, PLAYER_PIECE)
+            
+            self.info_label.config(text=f"Next best move: {best_move} using {ALGORITHM_NAMES[option]}. \nTime taken: {elapsed_time:.4f} seconds.\nAI Score: {ai_connected_fours}\nHuman Score: {player_connected_fours}")
+            self.root_node = root  # Save the root node for tree trace
+            self.root.after(1000, self.human_turn)  # Allow human to play after AI move
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Board is full, Game over.")
+
+    def human_turn(self):
+        self.info_label.config(text=self.info_label.cget("text") + "\nHuman's turn. Click on a column to drop your disc.")
+        self.canvas.bind("<Button-1>", self.human_move)
+
+    def human_move(self, event):
+        col = event.x // CELL_SIZE
+        if col < 0 or col >= COLS:
+            return
+        if not is_valid_move("".join(self.board), col):
+            messagebox.showerror("Error", "Invalid move, choose another column.")
+            return
+        self.board = drop_disc("".join(self.board), col, PLAYER_PIECE)
+        self.draw_board(self.canvas, self.board, 0, 0, CELL_SIZE)
+        self.canvas.unbind("<Button-1>")
+        self.root.after(1000, self.calculate_next_move)  # AI plays after human move
 
     def create_main_menu(self):
-        self.main_menu_frame = tk.Frame(self.root, bg="lightgrey", padx=20, pady=20, relief="solid", bd=2)
-        self.main_menu_frame.pack(pady=20)
+        self.main_menu_frame = tk.Frame(self.main_frame, bg="lightgrey", padx=20, pady=20, relief="solid", bd=2)
+        self.main_menu_frame.grid(row=0, column=0, rowspan=2, sticky="ns")
 
         tk.Label(self.main_menu_frame, text="Select Algorithm:", font=("Helvetica", 14, "bold"), bg="lightgrey").pack(pady=10)
         self.algorithm_var = tk.IntVar(value=0)
         for key, value in ALGORITHM_NAMES.items():
             tk.Radiobutton(self.main_menu_frame, text=value, variable=self.algorithm_var, value=key, font=("Helvetica", 12), bg="lightgrey").pack(anchor=tk.W)
 
+        tk.Label(self.main_menu_frame, text="Who is Player 1?", font=("Helvetica", 14, "bold"), bg="lightgrey").pack(pady=10)
+        tk.Radiobutton(self.main_menu_frame, text="AI", variable=self.player1_is_ai, value=True, font=("Helvetica", 12), bg="lightgrey").pack(anchor=tk.W)
+        tk.Radiobutton(self.main_menu_frame, text="Human", variable=self.player1_is_ai, value=False, font=("Helvetica", 12), bg="lightgrey").pack(anchor=tk.W)
+
         tk.Button(self.main_menu_frame, text="Set Initial State", command=self.show_initial_state_input, font=("Helvetica", 12), bg="lightblue", relief="raised", bd=2).pack(pady=10)
         tk.Button(self.main_menu_frame, text="Calculate Next Move", command=self.calculate_next_move, font=("Helvetica", 12), bg="lightblue", relief="raised", bd=2).pack(pady=10)
+        tk.Button(self.main_menu_frame, text="View Tree Trace", command=self.view_tree_trace, font=("Helvetica", 12), bg="lightblue", relief="raised", bd=2).pack(pady=10)
 
     def show_initial_state_input(self):
         self.initial_state_window = tk.Toplevel(self.root)
@@ -146,19 +182,17 @@ class ConnectFour:
         self.draw_tree(canvas, root, 2500, 50, 500)
 
     def draw_tree(self, canvas, node, x, y, x_offset):
-        """
-        Draw the tree structure with improved spacing and prevent overlap of nodes.
-        """
+        
         # Draw the node's board
-        self.draw_board(canvas, node.board, x, y, CELL_SIZE)
+        self.draw_board(canvas, node.board, x, y, CELL_SIZE_TREE)
 
         # Draw the node's score below the board
-        canvas.create_text(x + CELL_SIZE * COLS / 2, y + CELL_SIZE * ROWS + 20, text=str(node.value), fill="black")
+        canvas.create_text(x + CELL_SIZE_TREE * COLS / 2, y + CELL_SIZE_TREE * ROWS + 20, text=str(node.value), fill="black")
 
         if node.children:
             num_children = len(node.children)
             # Calculate spacing dynamically based on the number of children
-            child_spacing = max(x_offset // num_children, CELL_SIZE * 2 * COLS)
+            child_spacing = max(x_offset // num_children, CELL_SIZE_TREE * 2 * COLS)
 
             for i, child in enumerate(node.children):
                 # Calculate child node position
@@ -167,9 +201,9 @@ class ConnectFour:
 
                 # Draw a line to the child node
                 canvas.create_line(
-                    x + CELL_SIZE * COLS / 2,
-                    y + CELL_SIZE * ROWS,
-                    child_x + CELL_SIZE * COLS / 2,
+                    x + CELL_SIZE_TREE * COLS / 2,
+                    y + CELL_SIZE_TREE * ROWS,
+                    child_x + CELL_SIZE_TREE * COLS / 2,
                     child_y,
                     fill="black",
                 )
@@ -177,6 +211,8 @@ class ConnectFour:
                 # Recursively draw the child nodes with reduced spacing
                 self.draw_tree(canvas, child, child_x, child_y, x_offset // 2)
 
+    def view_tree_trace(self):
+        self.show_tree(self.root_node)
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -23,26 +23,29 @@ def convert_from_grid_to_string(grid):
             state += str(grid[i][j])
     return state
 
-def agent(grid, depth, option):
+def agent(grid, depth, option, player1_is_ai):
     state = convert_from_grid_to_string(grid)
     root = Node(None, state, 0, 1, 0, None)  # Root node for the AI
     valid_moves = get_valid_moves(state)
     scores = {}
 
+    # Determine the AI piece based on player1_is_ai
+    ai_piece = 1 if player1_is_ai else 2
+
     # Loop through valid moves and apply alpha-beta pruning for each
     for col in valid_moves:
-        child_state = drop_disc(state, col, 2)
-        child_node = Node(root, child_state, 1, 2, (1 % 2) + 1, col)
+        child_state = drop_disc(state, col, ai_piece)
+        child_node = Node(root, child_state, 1, ai_piece, (ai_piece % 2) + 1, col)
         root.children.append(child_node)
         
         try:
             start = time.time()
             if option == 1:
-                score = alpha_beta_pruning(child_node, depth, True, 2)
+                score = alpha_beta_pruning(child_node, depth, True, ai_piece)
             elif option == 2:
-                 score = minimax(child_node, depth, True, 2)
+                score = minimax(child_node, depth, True, ai_piece)
             elif option == 3:
-                score = expectiminimax(child_node, depth, True, 2)
+                score = expectiminimax(child_node, depth, True, ai_piece)
             end = time.time()
             print(f"Time taken for column {col} using {option}: {end - start:.4f} seconds")
             scores[col] = score
@@ -60,6 +63,44 @@ def agent(grid, depth, option):
 
     best_move = random.choice(best_moves)
     return best_move, root
+
+    # Find the best move(s)
+    max_value = max(scores.values(), default=float('-inf'))
+    best_moves = [col for col, score in scores.items() if score == max_value]
+
+    if not best_moves:
+        raise ValueError("No valid moves available or all scores are invalid.")
+
+    best_move = random.choice(best_moves)
+    return best_move, root
+
+def count_connected_fours(grid, piece):
+    count = 0
+    # Check horizontal locations for a win
+    for r in range(ROWS):
+        for c in range(COLS - 3):
+            if grid[r][c] == piece and grid[r][c + 1] == piece and grid[r][c + 2] == piece and grid[r][c + 3] == piece:
+                count += 1
+
+    # Check vertical locations for a win
+    for r in range(ROWS - 3):
+        for c in range(COLS):
+            if grid[r][c] == piece and grid[r + 1][c] == piece and grid[r + 2][c] == piece and grid[r + 3][c] == piece:
+                count += 1
+
+    # Check positively sloped diagonals
+    for r in range(ROWS - 3):
+        for c in range(COLS - 3):
+            if grid[r][c] == piece and grid[r + 1][c + 1] == piece and grid[r + 2][c + 2] == piece and grid[r + 3][c + 3] == piece:
+                count += 1
+
+    # Check negatively sloped diagonals
+    for r in range(3, ROWS):
+        for c in range(COLS - 3):
+            if grid[r][c] == piece and grid[r - 1][c + 1] == piece and grid[r - 2][c + 2] == piece and grid[r - 3][c + 3] == piece:
+                count += 1
+
+    return count
 
 def print_tree(node):
     queue = []
