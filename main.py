@@ -2,6 +2,7 @@ from expectiminimax import expectiminimax
 from minimax import minimax, minimize, print_tree
 from alpha_beta_pruning import alpha_beta_pruning, print_best_moves, print_tree
 from node import Node
+from utils import nodes_expanded
 import time
 
 def main():
@@ -11,8 +12,10 @@ def main():
     # board = "0"*7*4 + "0002000" + "0111220" # optimal move is 0
     # board = "0"*7*3 + "0000100" + "20012200" + "1111222" # optimal move is 3
     # board = "0"*7*3 + "0001000" + "20012200" + "1111222" # optimal move is 3
-    k = 10
-    player1 = 0
+    board = "000000000000000000000000000000100000222110"
+    
+    k = 8
+    player1 = 1
     turn = 1
     
     node = Node(None, board, 0, 1, 0, None)
@@ -25,6 +28,7 @@ def main():
     # print_best_moves(node)
     print("Time taken: ", end-start)
     # print_tree(node)
+    print("Number of nodes expanded: ", nodes_expanded(node))
     
     node2 = Node(None, board, 0, 1, 0, None)
     t1 = time.time()
@@ -34,16 +38,18 @@ def main():
     print(node2.value)
     print("best move ", node2.max_child.move)
     print("Time taken for expectiminimax: ", t2-t1)
+    print("Number of nodes expanded: ", nodes_expanded(node2))
 
-    # print(board)
-    # node3 = Node(None, board, 0, 1, 0, None)
-    # start = time.time()
-    # minimax(node3, k, player1, turn)
-    # end = time.time()
-    # print("Minimax")
-    # print(node3.value)
-    # print("best move ", node3.max_child.move)
-    # print("Time taken: ", end-start)
+    print(board)
+    node3 = Node(None, board, 0, 1, 0, None)
+    start = time.time()
+    minimax(node3, k, player1, turn)
+    end = time.time()
+    print("Minimax")
+    print(node3.value)
+    print("best move ", node3.max_child.move)
+    print("Time taken: ", end-start)
+    print("Number of nodes expanded: ", nodes_expanded(node3))
 
     # 000000000000000000000000000000200000111220
     # 000000000000000000000000000000000000000000

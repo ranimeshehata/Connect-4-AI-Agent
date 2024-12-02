@@ -12,7 +12,16 @@ def compete(board, k, player1):
     start = time.time()
     alpha_beta_pruning(node, k, player1, turn)
     end = time.time()
-    return node.max_child.move, (end-start), node.max_child.board
+    expanded = nodes_expanded(node)
+    return node.max_child.move, (end-start), node.max_child.board, expanded
+
+def nodes_expanded(node):
+    if node.children == []:
+        return 1
+    count = 0
+    for child in node.children:
+        count += nodes_expanded(child)
+    return count
 
 def main():
     k = int(input("Enter the depth of the tree: "))
@@ -20,10 +29,11 @@ def main():
     # player1 aymbol is 1, player2 symbol is 2, so if ai-agent started as player1, player1 = 0 
     player1 = int(input("Enter 1 if ai-agent started as player1, otherwise enter 0: "))
     board = input("Enter the board state as a string: ")
-    move, time_taken, new_board = compete(board, k, player1)
+    move, time_taken, new_board, nodes_number = compete(board, k, player1)
     print("Best move: ", move)
     print("Time taken: ", time_taken)
     print("Board state after the move: ", new_board)
+    print("Number of nodes expanded: ", nodes_number)
 
 
 # 000000000000000000000000000000200000111220

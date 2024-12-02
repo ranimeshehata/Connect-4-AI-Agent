@@ -146,3 +146,11 @@ def evaluate_window(window, piece):
         score += 150  # Encourage occupying the center
 
     return score
+
+def nodes_expanded(node):
+    if node.children == []:
+        return 1
+    count = 0
+    for child in node.children:
+        count += nodes_expanded(child)
+    return count
