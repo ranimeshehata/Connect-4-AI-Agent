@@ -195,37 +195,64 @@ class ConnectFour:
         h_scroll.config(command=canvas.xview)
         v_scroll.config(command=canvas.yview)
 
-        # Dynamic scroll region
+        # Calculate canvas dimensions dynamically based on tree depth and width
         max_depth = self.get_tree_depth(root)
-        width = max(1000, 100 * (2 ** max_depth))  # Dynamically handle large tree widths
+        max_width = 2 ** max_depth  # Maximum number of nodes at the deepest level
+        node_spacing = 200  # Horizontal space between nodes (adjust as needed)
+        width = max(1200, max_width * node_spacing)
         height = 300 * (max_depth + 1)
+
+        # Set the scrollable region
         canvas.config(scrollregion=(0, 0, width, height))
 
+        # Draw the tree starting at the top-middle of the canvas
+        x_start = width // 2
+        y_start = 50
+        x_offset = node_spacing // 2  # Horizontal offset for children nodes
 
-        self.draw_tree(canvas, root, width // 2, 50, width // 4)
+        self.draw_tree(canvas, root, x_start, y_start, x_offset)
+
+        # Adjust scrollregion dynamically after drawing
+        canvas.config(scrollregion=(0, 0, width + x_offset * 2, height))
 
     def draw_tree(self, canvas, node, x, y, x_offset):
         # Draw the current node's board
         self.draw_board(canvas, node.board, x, y, CELL_SIZE_TREE)
 
-        # Draw the node's score below the board
+        # Improved text clarity
+        score_x = x + CELL_SIZE_TREE * COLS / 2
+        score_y = y + CELL_SIZE_TREE * ROWS + 20
+
+        # Add more padding to the background rectangle
+        padding_x = 60  # Horizontal padding
+        padding_y = 15  # Vertical padding
+
+        canvas.create_rectangle(
+            score_x - padding_x,  # Left
+            score_y - padding_y,  # Top
+            score_x + padding_x,  # Right
+            score_y + padding_y,  # Bottom
+            fill="white", outline="black"
+        )
+
+        # Draw the text with bold font
         canvas.create_text(
-            x + CELL_SIZE_TREE * COLS / 2,
-            y + CELL_SIZE_TREE * ROWS + 20,
+            score_x,
+            score_y,
             text=f"Score: {node.value}",
-            fill="black"
+            fill="black",
+            font=("Arial", 12, "bold")
         )
 
         if node.children:
             num_children = len(node.children)
-            # Determine space per child based on available width
             total_width = x_offset * 2
-            child_spacing = total_width // max(num_children - 1, 1)
+            child_spacing = max(200, total_width // max(num_children - 1, 1))  # Minimum spacing
+            child_y = y + 350  # More vertical spacing
 
             for i, child in enumerate(node.children):
                 # Calculate the position for each child node
                 child_x = x - x_offset + i * child_spacing
-                child_y = y + 300
 
                 # Draw line from parent to child
                 canvas.create_line(
@@ -238,7 +265,6 @@ class ConnectFour:
 
                 # Recursively draw child nodes
                 self.draw_tree(canvas, child, child_x, child_y, x_offset // 2)
-
 
     def get_tree_depth(self, node):
         if not node.children:
