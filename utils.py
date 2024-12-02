@@ -111,7 +111,7 @@ def evaluate_window(window, piece):
     if consecutive_pieces == 4:
         score += 1000000  # Win condition
     elif consecutive_pieces == 3 and free_slots == 1:
-        score += 50000  # Strong winning opportunity
+        score += 500000  # Strong winning opportunity
     elif consecutive_pieces == 2 and free_slots == 2:
         score += 2000  # Potential winning connection
     elif consecutive_pieces == 2 and free_slots > 2:
@@ -132,7 +132,7 @@ def evaluate_window(window, piece):
             opponent_consecutive = 0
 
     if opponent_consecutive == 4:
-        score -= 500000  # Block opponent's win condition
+        score -= 800000  # Block opponent's win condition
     elif opponent_consecutive == 3 and free_slots == 1:
         score -= 400000  # Block opponent's strong winning opportunity
     elif opponent_consecutive == 2 and free_slots == 2:
