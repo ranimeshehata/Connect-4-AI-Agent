@@ -14,8 +14,8 @@ def arrayint_to_string(array):
     return state
 
 def drop_disc(state, column, piece):
+    # piece is taken from the turn
     for row in range(5, -1, -1):
-        # print("index now is", row * 7 + column, "column is", column, "row is", row)
         if state[row * 7 + column] == '0':
             new_state = ( state[:row * 7 + column] + str(piece) + state[row * 7 + column + 1:])
             break
@@ -88,12 +88,12 @@ def score_position(state, piece):
 
     return score
 
+
 def evaluate_window(window, piece):
     opponent_piece = "1" if piece == "2" else "2"
-   
     score = 0
 
-    # Evaluate offensive potential
+    # Evaluate consecutive pieces for player
     consecutive_pieces = 0
     max_consecutive_pieces = 0
     free_slots = 0
@@ -109,15 +109,15 @@ def evaluate_window(window, piece):
 
 
     if consecutive_pieces == 4:
-        score += 1000000  # Win condition
+        score += 1000000  
     elif consecutive_pieces == 3 and free_slots == 1:
-        score += 500000  # Strong winning opportunity
+        score += 500000 
     elif consecutive_pieces == 2 and free_slots == 2:
-        score += 2000  # Potential winning connection
+        score += 2000  
     elif consecutive_pieces == 2 and free_slots > 2:
-        score += 10  # Encourage building connections
+        score += 10  
 
-    # Evaluate defensive potential
+    # Evaluate consecutive pieces for opponent
     opponent_consecutive = 0
     max_opponent_consecutive = 0
     free_slots = 0
@@ -134,16 +134,16 @@ def evaluate_window(window, piece):
     if opponent_consecutive == 4:
         score -= 800000  # Block opponent's win condition
     elif opponent_consecutive == 3 and free_slots == 1:
-        score -= 400000  # Block opponent's strong winning opportunity
+        score -= 400000  
     elif opponent_consecutive == 2 and free_slots == 2:
-        score -= 1000  # Block opponent's potential winning connection
+        score -= 1000  
     elif opponent_consecutive == 2 and free_slots > 2:
-        score -= 5  # Discourage opponent from building connections
+        score -= 5  
 
     # Consider position in the board (center prioritization)
     center_column = (window[2] == piece)
     if center_column:
-        score += 150  # Encourage occupying the center
+        score += 150  
 
     return score
 

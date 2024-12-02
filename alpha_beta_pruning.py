@@ -12,7 +12,7 @@ def maximize(node, k, player1, turn, alpha, beta, cached_dict):
             node.value = cached_dict[node.board]
             return node.value
         piece = "1" if player1 else "2"
-        score = score_position(node.board, piece) # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        score = score_position(node.board, piece) 
         node.value = score
         cached_dict[node.board] = node.value
         return node.value
@@ -48,7 +48,7 @@ def minimize(node, k, player1, turn, alpha, beta, cached_dict):
             node.value = cached_dict[node.board]
             return node.value
         piece = "1" if player1 else "2"
-        score = score_position(node.board, piece) # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        score = score_position(node.board, piece)
         node.value = score
         cached_dict[node.board] = node.value
         return node.value
@@ -99,21 +99,3 @@ def print_best_moves(node):
         print(f"Player {turn}'s move should be: {node.max_child.move}")
         turn = (turn % 2) + 1
         node = node.max_child
-
-if __name__ == "__main__":
-    # Example empty board
-    board = "0" * 7 * 6  # Optimal move is 3
-    board = "0" * 7 * 5 + "0012210"  # Optimal move is 3
-    board = "0" * 7 * 4 + "0010000" + "0012200"  # Optimal move is 5 to block
-    node = Node(None, board, 0, 1, 0, None)
-    k = 8
-    player1 = 0
-    turn = 1
-
-    print("Running Alpha-Beta Pruning...")
-    start = time.time()
-    alpha_beta_pruning(node, k, player1, turn)
-    end = time.time()
-    print("Printing Tree...")
-    print_tree(node)
-    print("Time taken: ", end - start)

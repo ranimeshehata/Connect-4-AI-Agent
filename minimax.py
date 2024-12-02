@@ -9,7 +9,7 @@ def maximize(node, k, player1, turn, cached_dict):
             node.value = cached_dict[node.board]
             return node.value
         piece = "1" if player1 else "2"
-        score = score_position(node.board, piece) # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        score = score_position(node.board, piece) 
         node.value = score
         cached_dict[node.board] = node.value
         return node.value
@@ -21,7 +21,7 @@ def maximize(node, k, player1, turn, cached_dict):
         child = Node(node, child_state, node.depth+1, 2, turn, move)
         node.children.append(child)
 
-        value = minimize(child, k, player1, (turn % 2) + 1, cached_dict)       #turn?????????
+        value = minimize(child, k, player1, (turn % 2) + 1, cached_dict)   
         if value > max_value:
             max_value = value
             max_child = child
@@ -38,7 +38,7 @@ def minimize(node, k, player1, turn, cached_dict):
             node.value = cached_dict[node.board]
             return node.value
         piece = "1" if player1 else "2"
-        score = score_position(node.board, piece) # evaluate heuristic function, player1 if ai-agent then heuristic positive, else negative
+        score = score_position(node.board, piece) 
         node.value = score
         cached_dict[node.board] = node.value
         return node.value
@@ -91,26 +91,3 @@ def print_best_moves(node):
                                                                                           node.max_child.move)
         turn = (turn % 2) + 1
         node = node.max_child
-
-
-if __name__ == "__main__":
-    # example empty board
-    board = "0" * 7 * 6  # optimal move is 3
-    board = "0" * 7 * 5 + "0012210"  # optimal move is 3
-    board = "0" * 7 * 4 + "0010000" + "0012200"  # optimal move is 5 to block
-    # print(board[9])
-    node = Node(None, board, 0, 1, 0, None)
-    # player1 = 0 if ai-agent, else 1
-    # turn = 1 if player1, else 2
-    k = 2
-    player1 = 0
-    turn = 1
-    # alpha_beta_pruning(node, k, player1, turn)
-    # print(alpha_beta_pruning(node, k, player1, turn))
-    # print(node.value)
-    # player1 = 1
-
-    print("Running Minimax...")
-    print(maximize(node, k, player1, turn))
-    print("Printing Tree...")
-    print_tree(node)

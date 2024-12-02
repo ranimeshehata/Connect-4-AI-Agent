@@ -11,7 +11,6 @@ def change2DtoString(board):
 
 def compete(board, k, player1):
     turn = 1
-    # depth = 0, 1 for maximize
     node = Node(None, board, 0, 1, player1, None)
     start = time.time()
     alpha_beta_pruning(node, k, player1, turn)
@@ -36,7 +35,7 @@ def main():
              [0, 0, 0, 0, 0, 2, 0],
              [0, 1, 1, 1, 2, 2, 0]
              ]
-    # player1 aymbol is 1, player2 symbol is 2, so if ai-agent started as player1, player1 = 0 
+    # if ai-agent started as player1, player1 = 1, otherwise player1 0
     player1 = int(input("Enter 1 if ai-agent started as player1, otherwise enter 0: "))
     # board = input("Enter the board state as a string: ")
     move, time_taken, new_board, nodes_number = compete(change2DtoString(board), k, player1)
