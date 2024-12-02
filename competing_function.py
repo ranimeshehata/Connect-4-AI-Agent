@@ -5,6 +5,10 @@ from node import Node
 import time
 
 # Function takes board state, k, player1, and turn as input and returns the best move and time taken
+
+def change2DtoString(board):
+    return ''.join([str(cell) for row in board for cell in row])
+
 def compete(board, k, player1):
     turn = 1
     # depth = 0, 1 for maximize
@@ -25,11 +29,17 @@ def nodes_expanded(node):
 
 def main():
     k = int(input("Enter the depth of the tree: "))
-
+    board = [[0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 2, 0],
+             [0, 1, 1, 1, 2, 2, 0]
+             ]
     # player1 aymbol is 1, player2 symbol is 2, so if ai-agent started as player1, player1 = 0 
     player1 = int(input("Enter 1 if ai-agent started as player1, otherwise enter 0: "))
-    board = input("Enter the board state as a string: ")
-    move, time_taken, new_board, nodes_number = compete(board, k, player1)
+    # board = input("Enter the board state as a string: ")
+    move, time_taken, new_board, nodes_number = compete(change2DtoString(board), k, player1)
     print("Best move: ", move)
     print("Time taken: ", time_taken)
     print("Board state after the move: ", new_board)
