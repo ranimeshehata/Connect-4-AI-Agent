@@ -112,8 +112,9 @@ def chance_node(node, k, player1, turn, tree_root, move, cached_dict):
     if len(node.children) == 1:
         node.value = main_child_value
         return main_child_value
-    
-    probability = 0.4/(len(node.children)-1)
+    probability = 0.2
+    if len(node.children) == 2:
+        probability = 0.25
 
     for child in node.children:
         if child == main_child:
@@ -123,8 +124,10 @@ def chance_node(node, k, player1, turn, tree_root, move, cached_dict):
         else:
             value = minimize(child, k, player1, (turn)%2 + 1, tree_root, cached_dict)
         expected_value += (value * probability)
-    
-    expected_value += main_child_value * (1 - 0.4)
+        
+    probability = 0.6 if probability == 0.2 else 1 - probability
+
+    expected_value += main_child_value * probability
     node.value = expected_value
     return node.value
 
