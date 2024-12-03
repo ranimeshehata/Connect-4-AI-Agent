@@ -29,9 +29,9 @@ def agent(grid, depth, option, player1_is_ai):
     
     start = time.time()
     if option == 1:
-        score = alpha_beta_pruning(root, depth, player1_is_ai, 1)
-    elif option == 2:
         score = minimax(root, depth, player1_is_ai, 1)
+    elif option == 2:
+        score = alpha_beta_pruning(root, depth, player1_is_ai, 1)
     elif option == 3:
         score = expectiminimax(root, depth, player1_is_ai, 1)
     end = time.time()

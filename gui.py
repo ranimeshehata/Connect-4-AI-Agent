@@ -93,7 +93,7 @@ class ConnectFour:
             return
 
         grid = convert_from_string_to_grid("".join(self.board))
-        depth = 6  # k
+        depth = 8  # k
         option = self.algorithm
         player1_is_ai = self.player1_is_ai.get()
 

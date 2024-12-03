@@ -9,14 +9,16 @@ import time
 def change2DtoString(board):
     return ''.join([str(cell) for row in board for cell in row])
 
-def compete(board, k, player1):
+def compete(board_2D, player1):
+    if player1 == 2:
+        player1 = 0
+    board = change2DtoString(board_2D)
+    k = 5
     turn = 1
     node = Node(None, board, 0, 1, player1, None)
-    start = time.time()
     alpha_beta_pruning(node, k, player1, turn)
-    end = time.time()
-    expanded = nodes_expanded(node)
-    return node.max_child.move, (end-start), node.max_child.board, expanded
+    print(node.max_child.board)
+    return node.max_child.move
 
 def nodes_expanded(node):
     if node.children == []:
@@ -27,7 +29,7 @@ def nodes_expanded(node):
     return count
 
 def main():
-    k = int(input("Enter the depth of the tree: "))
+    # k = int(input("Enter the depth of the tree: "))
     board = [[0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0],
@@ -36,18 +38,13 @@ def main():
              [0, 1, 1, 1, 2, 2, 0]
              ]
     # if ai-agent started as player1, player1 = 1, otherwise player1 0
-    player1 = int(input("Enter 1 if ai-agent started as player1, otherwise enter 0: "))
-    # board = input("Enter the board state as a string: ")
-    move, time_taken, new_board, nodes_number = compete(change2DtoString(board), k, player1)
+    player1 = int(input("Enter 1 if ai-agent started as player1, otherwise enter 2: "))
+    t1 = time.time()
+    move = compete(board, player1)
+    t2 = time.time()
     print("Best move: ", move)
-    print("Time taken: ", time_taken)
-    print("Board state after the move: ", new_board)
-    print("Number of nodes expanded: ", nodes_number)
-
-
-# 000000000000000000000000000000200000111220
-# 000000000000000000000000000000100000222110
-# 000000000000000000000000000000000000000000
+    print("time is", t2 - t1)
+    
 if __name__ == "__main__":
     main()
     
