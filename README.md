@@ -1,7 +1,7 @@
 # Connect-4-AI-Agent
 
 ## Overview
-This project implements an AI agent to play **Connect 4** using advanced search algorithms and heuristics. The AI is designed to simulate competitive gameplay with efficient decision-making, utilizing minimax-based techniques enhanced by optimizations like alpha-beta pruning and caching.
+This project implements an AI agent to play **Connect 4** using advanced search algorithms and heuristics with a GUI built using **Tkinter**. The AI is designed to simulate competitive gameplay with efficient decision-making, utilizing minimax-based techniques enhanced by optimizations like alpha-beta pruning and caching.
 
 ---
 
